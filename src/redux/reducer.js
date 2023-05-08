@@ -3,8 +3,9 @@ import authReducer from './slices/auth.slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  //authReducer quản lí tthai của ng dùng
 });
 
-export default {rootReducer};
+export default rootReducer;
 
 

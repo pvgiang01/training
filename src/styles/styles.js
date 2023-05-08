@@ -1,10 +1,10 @@
 import { Dimensions } from "react-native";
 const { width, height } = Dimensions.get("window");
 import { COLORS } from './theme.style';
+// import background from '../assets/images/background..jpg'
 export const STYLES = {
     container: {
         flex: 1,
-        backgroundColor: COLORS.gray
     },
     wellcome: {
         height: Dimensions.get('window').height / 2.5
