@@ -232,12 +232,12 @@ export const CreateLeave = ({navigation}) => {
         <View style={styles.line} />
         <View style={{margin: 10, flexDirection: 'row'}}>
           <Text style={styles.text}>Loại nghỉ phép:</Text>
-          {/* <RNPickerSelect
+          <RNPickerSelect
             placeholder={{label: 'Chọn loại nghỉ phép', value: null}}
             items={typeLeave}
             onValueChange={updatePickerSelected}
             value={selectedTypeLeave}
-          /> */}
+          />
         </View>
         <View
           style={{
@@ -280,7 +280,9 @@ export const CreateLeave = ({navigation}) => {
              <RNPickerSelect
             onValueChange={(value) => console.log(value)}
             items={[
-            
+                { label: 'Toàn ca', value: 'full' },
+                { label: 'Trước ca', value: 'before' },
+                { label: 'Sau ca', value: 'after' },
             ]}
         />
         </View>
