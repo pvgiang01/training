@@ -27,10 +27,10 @@ const Ui = props => {
     items_per_page: 0,
   });
 
-  const onEndReached = () => {
+  const onEndReached = async () => {
     !dataEmployee.length < PAGE_SIZE && setIsLoading(true);
     if (meta.next_page > meta.current_page || dataEmployee.length < PAGE_SIZE) {
-      fetch(API_POST_EMPLOYEE, {
+      await fetch(API_POST_EMPLOYEE, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -58,7 +58,8 @@ const Ui = props => {
   };
 
   useEffect(() => {
-    fetch(API_POST_EMPLOYEE, {
+    async function getEmployee(){
+    await fetch(API_POST_EMPLOYEE, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -83,6 +84,8 @@ const Ui = props => {
         }
       })
       .catch(err => console.log(err));
+    };
+    getEmployee();
   }, [search]);
 
   const handleCallPhone = () => {

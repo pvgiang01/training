@@ -13,8 +13,8 @@ import i18n from '../../i18n/i18n';
 const SettingScreen = ({navigation}) => {
   const dispatch = useDispatch();
   const accessToken = useAppSelector(state => state.auth.accessToken);
-  const handleLogOut = () => {
-    fetch(API_LOGOUT, {
+  const handleLogOut = async() => {
+    await fetch(API_LOGOUT, {
       method: 'POST',
       headers: {
         Accept: 'application/json',

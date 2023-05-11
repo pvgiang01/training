@@ -26,7 +26,8 @@ const Notifications = (props) => {
   const [isLoading,setIsLoading] = useState(true)
   const [state, setState] = useState(0);
   useEffect(() => {
-    fetch(API_NOTIFICATIONS, {
+    async function getNotification(){
+    await fetch(API_NOTIFICATIONS, {
       method: 'POST',
       headers: {
         Accept: 'applicaton/json',
@@ -43,17 +44,18 @@ const Notifications = (props) => {
           const dataUnseen = json.result.data.unseen;
           setDataNotifications(data);
           setUnseen(dataUnseen);
-          setState(state +1)
         } else {
           console.log('Failed!!!!');
         }
       })
       .catch(error => console.log('Error: ', error))
       .finally(() => setIsLoading(false))
+    };
+    getNotification();
   }, []);
   
-  const handleMarkAll = () =>{
-    fetch(API_SEEN_ALL_NOTIFICATIONS,{
+  const handleMarkAll = async () =>{
+    await fetch(API_SEEN_ALL_NOTIFICATIONS,{
       method:'POST',
       headers:{
         Accept: 'application/json',
@@ -67,7 +69,7 @@ const Notifications = (props) => {
     .then((json) =>{
       if(json.result?.status){
         const data = json.result.data
-        setDataNotifications(data)
+        setMarkAllNotifications(data)
       }
     })
     .catch((error) => console.log('Error: ',error))

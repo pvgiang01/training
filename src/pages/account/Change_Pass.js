@@ -18,8 +18,8 @@ const ChangePass = ({navigation}) => {
   const [confirm_password, setConfirm_password] = useState('');
   const [showP,setShowP] = useState(false)
   const [showP2,setShowP2] = useState(false)
-  const handleChangePass = () => {
-    fetch(API_CHANGE_PASS, {
+  const handleChangePass = async () => {
+    await fetch(API_CHANGE_PASS, {
       method: 'POST',
       headers: {
         Accept: 'application/json',

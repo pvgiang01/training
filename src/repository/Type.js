@@ -7,3 +7,4 @@ export const API_NOTIFICATIONS= "https://vanhuong-poc.izisolution.vn/api/v1/vh/n
 export const API_DETAIL_NOTIFICATIONS= "https://vanhuong-poc.izisolution.vn/api/v1/vh/notification/mark_message"
 export const API_SEEN_ALL_NOTIFICATIONS= "https://vanhuong-poc.izisolution.vn/api/v1/vh/notification/mark_all"
 export const API_GET_REMAIN_LEAVE = "https://vanhuong-poc.izisolution.vn/api/v1/vh/timesheet/leave/get_remain_leave"
+export const API_GET_TYPE_LEAVE = "https://vanhuong-poc.izisolution.vn/api/v1/vh/timesheet/leave/get_type_leaves"

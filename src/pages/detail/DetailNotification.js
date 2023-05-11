@@ -9,7 +9,8 @@ const DetailNotification = ({route}) => {
   const [dataNotifications, setDataNotifications] = useState([]);
 
   useEffect(() => {
-    fetch(API_DETAIL_NOTIFICATIONS, {
+    async function getDetailNotification(){
+     await fetch(API_DETAIL_NOTIFICATIONS, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -30,6 +31,8 @@ const DetailNotification = ({route}) => {
         }
       })
       .catch(error => console.log('Error: ', error));
+    };
+    getDetailNotification();
   }, []);
   convertDate = /(\d{1,2})\/(\d{1,2})\/(\d{4})/; // Tạo biểu thức chính quy để tìm ngày
   const match = message.match(convertDate); // Tìm kiếm ngày trong chuỗi
@@ -47,6 +50,7 @@ const DetailNotification = ({route}) => {
   return (
     <View style={styles.container}>
       <View style={styles.viewDate}>
+        {/* <Text style={styles.textHeader}>Giải trình công</Text> */}
         <Text style={styles.textDate}>Ngày {fomatDate}</Text>
       </View>
       <View style={{margin: 10, flexDirection: 'row'}}>
@@ -98,12 +102,17 @@ const styles = StyleSheet.create({
   },
   viewDate: {
     alignItems: 'center',
-    marginTop: 19,
+    marginTop:10
+  },
+  textHeader:{
+    fontFamily:'Chakra-Petch',
+    fontSize:22,
+    color:'#016243'
   },
   textDate: {
     fontSize: 20,
     color: 'black',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   line: {
     backgroundColor: '#d9d9d9',

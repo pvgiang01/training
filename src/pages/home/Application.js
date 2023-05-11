@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  Image,
+  Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SvgWork from '../../assets/svg/WorkSvg';
@@ -13,15 +15,18 @@ import SvgChild from '../../assets/svg/ChildSvg';
 import SvgProject from '../../assets/svg/ProjectSvg';
 import SvgFile from '../../assets/svg/FileSvg';
 import SvgTime from '../../assets/svg/TimeSvg';
+import SvgPlane from '../../assets/svg/plane';
 import {useAppSelector} from '../../redux/store';
 import {API_GET_REMAIN_LEAVE} from '../../repository/Type';
 
-const Application = ({navigation,route}) => {
+const Application = ({navigation}) => {
   const access_token = useAppSelector(state => state.auth.accessToken);
   const [dataLeave, setDataLeave] = useState();
-
+  const image =
+    'https://vanhuong-poc.izisolution.vn/web/image/employee/5966?timestamp=1683516718';
   useEffect(() => {
-    fetch(API_GET_REMAIN_LEAVE, {
+    async function getRemainLeave(){
+     await fetch(API_GET_REMAIN_LEAVE, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -33,13 +38,15 @@ const Application = ({navigation,route}) => {
     })
       .then(response => response.json())
       .then(json => {
-        if (json.result?.code == 200) {
+        if (json.result?.status) {
           const data = json.result.data;
           setDataLeave(data);
         }
       })
       .catch(error => console.log('Error: ', error));
-  },[]);
+    };
+    getRemainLeave();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
@@ -56,8 +63,14 @@ const Application = ({navigation,route}) => {
           </TouchableOpacity>
         </View>
         <View style={styles.viewProfile}>
-          <View style={styles.imgProfile}></View>
-          <Text style={styles.textName}>Bùi Tiến Dũng</Text>
+          <View style={styles.imgProfile}>
+            <Image
+              source={{uri: image}}
+              style={styles.img}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.textName}>Bùi Việt Dũng</Text>
         </View>
         <View
           style={{
@@ -106,11 +119,15 @@ const Application = ({navigation,route}) => {
           <SvgWork />
           <Text style={styles.textWork}>Bảng công</Text>
         </TouchableOpacity>
-        <View style={styles.viewWork}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CreateLeave')}
+          style={styles.viewWork}>
           <SvgLeave />
           <Text style={styles.textWork}>Xin nghỉ</Text>
-        </View>
-        <View style={styles.viewWork}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CreateChild')}
+          style={styles.viewWork}>
           <SvgChild style={{marginTop: 15}} />
           <Text
             style={[
@@ -119,8 +136,10 @@ const Application = ({navigation,route}) => {
             ]}>
             Chế độ con nhỏ
           </Text>
-        </View>
-        <View style={styles.viewWork}>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CreateProject')}
+          style={styles.viewWork}>
           <SvgProject style={{margin: 10}} />
           <Text
             style={[
@@ -129,7 +148,7 @@ const Application = ({navigation,route}) => {
             ]}>
             Đăng kí đi dự án
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
       <View style={{flexDirection: 'row', marginTop: 10}}>
         <View style={styles.viewWork}>
@@ -140,6 +159,16 @@ const Application = ({navigation,route}) => {
               {maxWidth: '100%', flexWrap: 'wrap', textAlign: 'center'},
             ]}>
             Đăng kí đi muộn về sớm
+          </Text>
+        </View>
+        <View style={styles.viewWork}>
+          <SvgPlane />
+          <Text
+            style={[
+              styles.textWork,
+              {maxWidth: '100%', flexWrap: 'wrap', textAlign: 'center'},
+            ]}>
+            Đơn công tác
           </Text>
         </View>
         <View style={styles.viewWork}>
@@ -169,7 +198,7 @@ const Application = ({navigation,route}) => {
 };
 
 export default Application;
-
+const {height, width} = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -178,6 +207,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     color: 'black',
+  },
+  img: {
+    borderRadius: 100,
+    height: 110,
+    width: 110,
+    marginTop: 6,
   },
   viewProfile: {
     backgroundColor: 'white',

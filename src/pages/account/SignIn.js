@@ -17,14 +17,13 @@ export const LoginScreen = ({navigation}) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [showP, setShowP] = useState(false);
-  const [username,setUsername] = useState({})
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (login.trim() == 0) {
       Alert.alert('Vui lòng nhập login');
     } else if (password.trim() == 0) {
       Alert.alert('Vui lòng nhập password');
     } else {
-      fetch(API_SIGNIN, {
+      await fetch(API_SIGNIN, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -39,10 +38,8 @@ export const LoginScreen = ({navigation}) => {
       })
         .then(response => response.json())
         .then(json => {
-          if (json.result?.code == 200) {
+          if (json.result?.status) {
             const token = json.result.data.access_token;
-            const data1 = json.result.data.user_id.name
-            console.log(data1);
             dispatch(setUser(token));
             navigation.navigate('MyTabs');
           } else {
@@ -120,10 +117,8 @@ const styles = StyleSheet.create({
   },
   imgBackground: {
     position: 'absolute',
-    width: 375,
-    height: 667,
-    left: 0,
-    top: 0,
+    width: '100%',
+    height: '100%',
   },
   imgLogo: {
     position: 'absolute',

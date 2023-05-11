@@ -9,7 +9,8 @@ const DetailScreen = ({route}) => {
   const [dataEmployee, setDataEmployee] = useState([]);
 
   useEffect(() => {
-    fetch(API_DETAIL_EMPLOYEE, {
+    async function getDetailEmployee(){
+     await fetch(API_DETAIL_EMPLOYEE, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -30,6 +31,8 @@ const DetailScreen = ({route}) => {
         }
       })
       .catch(err => console.log(err));
+    };
+    getDetailEmployee();
   }, []);
   return (
     <View style={{flex: 1, backgroundColor: 'white'}}>
