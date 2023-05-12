@@ -26,8 +26,8 @@ const Notifications = (props) => {
   const [isLoading,setIsLoading] = useState(true)
   const [state, setState] = useState(0);
   useEffect(() => {
-    async function getNotification(){
-    await fetch(API_NOTIFICATIONS, {
+     function getNotification(){
+     fetch(API_NOTIFICATIONS, {
       method: 'POST',
       headers: {
         Accept: 'applicaton/json',
@@ -54,8 +54,8 @@ const Notifications = (props) => {
     getNotification();
   }, []);
   
-  const handleMarkAll = async () =>{
-    await fetch(API_SEEN_ALL_NOTIFICATIONS,{
+  const handleMarkAll = () =>{
+     fetch(API_SEEN_ALL_NOTIFICATIONS,{
       method:'POST',
       headers:{
         Accept: 'application/json',
@@ -126,7 +126,7 @@ const Notifications = (props) => {
             {i18n.t('ReadAll')} ({unseen})
           </Text>
         </TouchableOpacity>
-        {isLoading ? <ActivityIndicator/> : (
+        {isLoading ? <ActivityIndicator size={30}/> : (
           <FlatList
           data={dataNotifications}
           renderItem={renderItem}
@@ -230,5 +230,5 @@ const styles = StyleSheet.create({
     marginRight: 20,
     height: 35,
     width: 90,
-  }
+  },
 });

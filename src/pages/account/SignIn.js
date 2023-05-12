@@ -17,13 +17,13 @@ export const LoginScreen = ({navigation}) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [showP, setShowP] = useState(false);
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (login.trim() == 0) {
       Alert.alert('Vui lòng nhập login');
     } else if (password.trim() == 0) {
       Alert.alert('Vui lòng nhập password');
     } else {
-      await fetch(API_SIGNIN, {
+      fetch(API_SIGNIN, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -38,7 +38,7 @@ export const LoginScreen = ({navigation}) => {
       })
         .then(response => response.json())
         .then(json => {
-          if (json.result?.status) {
+          if (json.result?.code === 200) {
             const token = json.result.data.access_token;
             dispatch(setUser(token));
             navigation.navigate('MyTabs');
@@ -56,7 +56,7 @@ export const LoginScreen = ({navigation}) => {
       <View>
         <SvgLogo style={styles.imgLogo} />
       </View>
-      <View style={{marginLeft: 20}}>
+      <View style={{marginLeft: 10,marginRight:10}}>
         <View style={styles.inputEmail}>
           <TextInput style={{fontFamily:'Chakra-Petch'}}
             value={login}
@@ -65,7 +65,7 @@ export const LoginScreen = ({navigation}) => {
             placeholderTextColor="gray"
           />
         </View>
-          <View style={{position: "relative"}}>
+          <View style={{position: "relative",}}>
         <View style={styles.inputPass}>
           <TextInput style={{fontFamily:'Chakra-Petch'}}
             value={password}
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   imgBackground: {
     position: 'absolute',
     width: '100%',
-    height: '100%',
+    flex:1
   },
   imgLogo: {
     position: 'absolute',
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   inputEmail: {
     width: 370,
     minHeight: 50,
-    paddingRight:50,
+    paddingRight:10,
     paddingLeft:10,
     top: 294,
     position: 'absolute',

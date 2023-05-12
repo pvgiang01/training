@@ -76,8 +76,9 @@ const Application = ({navigation}) => {
           style={{
             flexDirection: 'row',
             position: 'absolute',
-            marginTop: 200,
+            marginTop: 190,
             marginLeft: 30,
+            marginRight:30
           }}>
           <View style={{flexDirection: 'column', marginRight: 10}}>
             <Text style={styles.text}>Quản lí công</Text>
@@ -112,7 +113,7 @@ const Application = ({navigation}) => {
       <View style={{marginLeft: 10, marginTop: 100}}>
         <Text style={styles.textCategory}>Ưa thích</Text>
       </View>
-      <View style={{flexDirection: 'row'}}>
+      <View style={{flexDirection: 'row',marginLeft:5,marginRight:10}}>
         <TouchableOpacity
           style={styles.viewWork}
           onPress={() => navigation.navigate('Work')}>
@@ -120,7 +121,7 @@ const Application = ({navigation}) => {
           <Text style={styles.textWork}>Bảng công</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => navigation.navigate('CreateLeave')}
+          onPress={() => navigation.navigate('LeaveScreen')}
           style={styles.viewWork}>
           <SvgLeave />
           <Text style={styles.textWork}>Xin nghỉ</Text>
@@ -150,7 +151,7 @@ const Application = ({navigation}) => {
           </Text>
         </TouchableOpacity>
       </View>
-      <View style={{flexDirection: 'row', marginTop: 10}}>
+      <View style={{flexDirection: 'row', marginTop: 10,marginLeft:5,marginRight:5}}>
         <View style={styles.viewWork}>
           <SvgFile style={{marginTop: 15}} />
           <Text
@@ -219,10 +220,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 160,
     width: 390,
-    margin: 10,
+    marginLeft:10,
+    marginRight:10,
     top: 90,
     borderRadius: 20,
     elevation: 2,
+    flex:1
   },
   imgProfile: {
     position: 'absolute',
@@ -258,9 +261,9 @@ const styles = StyleSheet.create({
     color: '#016243',
   },
   viewWork: {
-    marginLeft: 10,
     height: 110,
     width: 90,
+    marginHorizontal:5,
     backgroundColor: '#f2f2f2',
     borderRadius: 10,
     alignItems: 'center',

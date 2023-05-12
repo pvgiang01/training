@@ -9,21 +9,24 @@ import {
   Modal,
   Dimensions,
   FlatList,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useAppSelector} from '../../redux/store';
-import {API_GET_REMAIN_LEAVE, API_GET_TYPE_LEAVE} from '../../repository/Type';
+import {
+  API_GET_REMAIN_LEAVE,
+  API_GET_TYPE_LEAVE,
+  API_CREATE_LEAVE,
+} from '../../repository/Type';
 import {Calendar} from 'react-native-calendars';
 import localConfigCalendar from '../../component/LocalConfig';
 import moment from 'moment';
-import ModalCalendar from '../../component/ModalCalendar';
-import RNPickerSelect from 'react-native-picker-select';
 import {eachDayOfInterval, format} from 'date-fns';
 export const CreateLeave = ({navigation}) => {
   const access_token = useAppSelector(state => state.auth.accessToken);
   const [isSelected, setIsSelected] = useState(false);
-  const [input, setInput] = useState();
+  const [note, setNote] = useState();
   const [dataLeave, setDataLeave] = useState();
   const [showCalendar, setShowCalendar] = useState(false);
   const [showCalendar2, setShowCalendar2] = useState(false);
@@ -31,12 +34,16 @@ export const CreateLeave = ({navigation}) => {
   const [toDate, setToDate] = useState('');
   const [typeLeave, setTypeLeave] = useState('');
   const [selectedTypeLeave, setSelectedTypeLeave] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState(false);
+  const [dropdownValue, setDropdownValue] = useState([]);
+
   const currentDate = moment().format('DD/MM/YYYY');
   localConfigCalendar;
 
   useEffect(() => {
-     function getRemainLeave(){
-       fetch(API_GET_REMAIN_LEAVE, {
+    function getRemainLeave() {
+      fetch(API_GET_REMAIN_LEAVE, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -54,13 +61,39 @@ export const CreateLeave = ({navigation}) => {
           }
         })
         .catch(error => console.log('Error: ', error));
-    };
+    }
     getRemainLeave();
   }, []);
 
   useEffect(() => {
-    function getTypeLeave(){
+    function getTypeLeave() {
       fetch(API_GET_TYPE_LEAVE, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: access_token,
+        }),
+      })
+        .then(response => response.json())
+        .then(json => {
+          if (json.result?.status) {
+            const data = json.result.data.app_data;
+            const newOptions = data.map(item => ({
+              label: item.name,
+              value: item.id,
+            }));
+            setTypeLeave(newOptions);
+          }
+        })
+        .catch(error => console.log('Error: ', error));
+    }
+    getTypeLeave();
+  }, []);
+  const handleCreateLeave = () => {
+    fetch(API_CREATE_LEAVE, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -68,24 +101,19 @@ export const CreateLeave = ({navigation}) => {
       },
       body: JSON.stringify({
         access_token: access_token,
+        empolyee_id: empolyee_id,
+        type_id: selectedTypeLeave,
+        date_from: fromDate,
+        date_to: toDate,
+        used_time_off_fund: isSelected,
+        note: note,
+        lines: {
+          date: date,
+          type: type,
+        },
       }),
-    })
-      .then(response => response.json())
-      .then(json => {
-        if (json.result?.status) {
-          const data = json.result.data.app_data;
-          const newOptions = data.map(item => ({
-            label: item.name,
-            value: item.id,
-          }));
-          setTypeLeave(newOptions);
-        }
-      })
-      .catch(error => console.log('Error: ', error));
-    };
-    getTypeLeave();
-  }, []);
-  
+    });
+  };
   const handlePressFormDate = () => {
     setShowCalendar(true);
     setFormDate('');
@@ -102,16 +130,12 @@ export const CreateLeave = ({navigation}) => {
     setShowCalendar2(false);
     setToDate(day.dateString);
   };
-  const getDaysInRange = () => {
+  const getDaysInRange = day => {
     if (fromDate && toDate) {
       const fromDateObj = new Date(fromDate);
       const toDateObj = new Date(toDate);
       const days = eachDayOfInterval({start: fromDateObj, end: toDateObj});
-      return days;
-    } else if (toDate) {
-      const fromDateObj = new Date();
-      const toDateObj = new Date(toDate);
-      const days = eachDayOfInterval({start: fromDateObj, end: toDateObj});
+      setDropdownValue([]);
       return days;
     } else if (fromDate) {
       return [new Date(fromDate)];
@@ -119,20 +143,25 @@ export const CreateLeave = ({navigation}) => {
       return [];
     }
   };
-  const updatePickerSelected = (value) => {
-    console.log(` Selected value: ${value}`)
-    }
+  const handleSelectTypeLeave = value => {
+    setSelectedTypeLeave(value);
+    setModalVisible(false);
+  };
+  const handleDropdownChange = value => {
+    setDropdownValue(value);
+    setModalType(false);
+  };
   return (
     <View style={styles.container}>
       <ScrollView>
         <View style={{margin: 10, flexDirection: 'row'}}>
           <Text style={styles.text}>Nhân sự:</Text>
-          <Text style={styles.textItem}>VH000784-Bùi Tiến Dũng</Text>
+          <Text style={styles.textItem}></Text>
         </View>
         <View style={styles.line} />
         <View style={{margin: 10, flexDirection: 'row'}}>
           <Text style={styles.text}>Phòng ban:</Text>
-          <Text style={styles.textItem}>Ban Tư vấn Giám sát</Text>
+          <Text style={styles.textItem}></Text>
         </View>
         <View style={styles.line} />
         <TouchableOpacity
@@ -232,12 +261,44 @@ export const CreateLeave = ({navigation}) => {
         <View style={styles.line} />
         <View style={{margin: 10, flexDirection: 'row'}}>
           <Text style={styles.text}>Loại nghỉ phép:</Text>
-          <RNPickerSelect
-            placeholder={{label: 'Chọn loại nghỉ phép', value: null}}
-            items={typeLeave}
-            onValueChange={updatePickerSelected}
-            value={selectedTypeLeave}
-          />
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setModalVisible(true)}>
+            {selectedTypeLeave.label ? (
+              <Text style={styles.textItem}>{selectedTypeLeave.label}</Text>
+            ) : (
+              <Text style={styles.placeholder}>Chọn loại nghỉ phép</Text>
+            )}
+            <FontAwesome
+              name="caret-down"
+              style={styles.icon}
+              size={20}
+              color="#3F3F3F"
+            />
+          </TouchableOpacity>
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.modalBackground}
+              onPress={() => setModalVisible(false)}>
+              <View style={styles.modalContainer}>
+                <FlatList
+                  data={typeLeave}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({item}) => (
+                    <TouchableOpacity
+                      style={styles.modalItem}
+                      onPress={() => handleSelectTypeLeave(item.id)}>
+                      <Text style={styles.modalItemText}>{item.label}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </TouchableOpacity>
+          </Modal>
         </View>
         <View
           style={{
@@ -258,15 +319,21 @@ export const CreateLeave = ({navigation}) => {
           <Text style={styles.textLeave}>Ngày</Text>
           <Text style={styles.textLeave}>Buổi nghỉ</Text>
         </View>
-        <View style={{marginLeft: 80, marginTop: 10, flexDirection: 'row'}}>
+        <View
+          style={{paddingHorizontal: 60, marginTop: 10, flexDirection: 'row'}}>
           {fromDate && toDate && (
             <FlatList
               data={getDaysInRange()}
               renderItem={({item}) => (
-                <View style={{marginTop: 10}}>
+                <View style={{marginTop: 10, flexDirection: 'row'}}>
                   <Text style={styles.textItem}>
                     {format(item, 'dd/MM/yyyy')}
                   </Text>
+                  <TouchableOpacity
+                    style={{paddingHorizontal: 60}}
+                    onPress={() => setModalType(true)}>
+                    <Text style={styles.textItem}>{dropdownValue}</Text>
+                  </TouchableOpacity>
                 </View>
               )}
               keyExtractor={item => format(item, 'yyyy-MM-dd')}
@@ -277,14 +344,29 @@ export const CreateLeave = ({navigation}) => {
               {format(new Date(), 'dd/MM/yyyy')}
             </Text>
           )}
-             <RNPickerSelect
-            onValueChange={(value) => console.log(value)}
-            items={[
-                { label: 'Toàn ca', value: 'full' },
-                { label: 'Trước ca', value: 'before' },
-                { label: 'Sau ca', value: 'after' },
-            ]}
-        />
+
+          <Modal
+            visible={modalType}
+            transparent={true}
+            onRequestClose={() => setModalType(false)}
+            animationType="slide">
+            <View style={styles.centeredView}>
+              <View style={styles.modalView2}>
+                <TouchableOpacity
+                  onPress={() => handleDropdownChange('Toàn ca')}>
+                  <Text style={styles.text}>Toàn ca</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDropdownChange('Sau ca')}>
+                  <Text style={styles.text}>Sau ca</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDropdownChange('Trước ca')}>
+                  <Text style={styles.text}>Trước ca</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
         <View style={styles.line2} />
         <View style={{margin: 10}}>
@@ -293,11 +375,16 @@ export const CreateLeave = ({navigation}) => {
             style={styles.textInput}
             multiline={true}
             numberOfLines={4}
-            onChangeText={text => setInput(text)}
+            onChangeText={text => setNote(text)}
           />
         </View>
       </ScrollView>
-      <View style={{flexDirection: 'row', marginLeft: 5}}>
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 5,
+          justifyContent: 'space-between',
+        }}>
         <TouchableOpacity style={styles.btnSave}>
           <Text style={{color: 'white', fontSize: 20}}>Lưu</Text>
         </TouchableOpacity>
@@ -310,7 +397,7 @@ export const CreateLeave = ({navigation}) => {
       </View>
     </View>
   );
-}
+};
 
 export default CreateLeave;
 const {height} = Dimensions.get('window');
@@ -318,6 +405,11 @@ const modalHeight = height / 2;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  icon: {
+    position: 'absolute',
+    paddingHorizontal: 230,
+    margin: 5,
   },
   line: {
     backgroundColor: '#d9d9d9',
@@ -395,6 +487,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalView2: {
+    backgroundColor: 'white',
+    width: 150,
+    elevation: 2,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalView: {
     backgroundColor: 'white',
     shadowColor: '#000',
@@ -410,5 +510,41 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: Dimensions.get('window').width * 0.8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  modalItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: '#3F3F3F',
+  },
+  input: {
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+  },
+  placeholder: {
+    fontSize: 20,
+    color: '#3F3F3F',
+    padding: 5,
+  },
+  textSelect: {
+    fontSize: 16,
+    color: '#3F3F3F',
+    padding: 5,
   },
 });
