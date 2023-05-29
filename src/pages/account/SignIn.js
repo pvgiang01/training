@@ -1,5 +1,15 @@
 import React, {useState} from 'react';
-import {Text,View,StyleSheet,TouchableOpacity,Alert,TextInput, ScrollView} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  Dimensions,
+  Platform,
+  ToastAndroid
+} from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import {setUser} from '../../redux/slices/auth.slice';
 import {useDispatch} from 'react-redux';
@@ -19,9 +29,9 @@ export const LoginScreen = ({navigation}) => {
   const [showP, setShowP] = useState(false);
   const handleLogin = () => {
     if (login.trim() == 0) {
-      Alert.alert('Vui lòng nhập login');
+      ToastAndroid.show('Vui lòng nhập tài khoản',ToastAndroid.SHORT);
     } else if (password.trim() == 0) {
-      Alert.alert('Vui lòng nhập password');
+      ToastAndroid.show('Vui lòng nhập mật khẩu',ToastAndroid.SHORT);
     } else {
       fetch(API_SIGNIN, {
         method: 'POST',
@@ -39,14 +49,14 @@ export const LoginScreen = ({navigation}) => {
         .then(response => response.json())
         .then(json => {
           if (json.result?.code === 200) {
-            const token = json.result.data.access_token;
-            dispatch(setUser(token));
+            const result = json.result.data;
+            dispatch(setUser(result));
             navigation.navigate('MyTabs');
           } else {
-            Alert.alert('Tài khoản hoặc mật khẩu không đúng');
+            ToastAndroid.show('Tài khoản hoặc mật khẩu không đúng',ToastAndroid.SHORT);
           }
         })
-        .catch(err => console.log(err));
+        .catch(err => console.warn(err));
     }
   };
 
@@ -56,31 +66,38 @@ export const LoginScreen = ({navigation}) => {
       <View>
         <SvgLogo style={styles.imgLogo} />
       </View>
-      <View style={{marginLeft: 10,marginRight:10}}>
         <View style={styles.inputEmail}>
-          <TextInput style={{fontFamily:'Chakra-Petch'}}
+          <TextInput
+            style={{fontFamily: 'Chakra-Petch'}}
             value={login}
             placeholder={i18n.t('User')}
             onChangeText={text => setLogin(text)}
             placeholderTextColor="gray"
           />
         </View>
-          <View style={{position: "relative",}}>
-        <View style={styles.inputPass}>
-          <TextInput style={{fontFamily:'Chakra-Petch'}}
-            value={password}
-            placeholder={i18n.t('Password')}
-            onChangeText={text => setPassword(text)}
-            placeholderTextColor="gray"
-            secureTextEntry={!showP}
-          />
-          <FontAwesome5
-            name={showP ? 'eye-slash' : 'eye'}
-            onPress={() => setShowP(!showP)}
-            color="gray"
-            size={20}
-            style={{position: "absolute", zIndex: 9, right: 20, alignItems: "center", justifyContent: "center"}}
-          />
+        <View style={{position: 'relative'}}>
+          <View style={styles.inputPass}>
+            <TextInput
+              style={{fontFamily: 'Chakra-Petch'}}
+              value={password}
+              placeholder={i18n.t('Password')}
+              onChangeText={text => setPassword(text)}
+              placeholderTextColor="gray"
+              secureTextEntry={!showP}
+            />
+            <FontAwesome5
+              name={showP ? 'eye-slash' : 'eye'}
+              onPress={() => setShowP(!showP)}
+              color="gray"
+              size={20}
+              style={{
+                position: 'absolute',
+                zIndex: 9,
+                right: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            />
           </View>
         </View>
         <View>
@@ -90,7 +107,6 @@ export const LoginScreen = ({navigation}) => {
             <Text style={styles.textLogin}>{i18n.t('SignIn')}</Text>
           </TouchableOpacity>
         </View>
-      </View>
       <View style={styles.viewIcon}>
         <View style={{flexDirection: 'column', marginHorizontal: 25}}>
           <SvgWebsite />
@@ -110,15 +126,14 @@ export const LoginScreen = ({navigation}) => {
 };
 
 export default LoginScreen;
-
+const SCREEN_WIDTH = Dimensions.get('screen').width;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   imgBackground: {
     position: 'absolute',
-    width: '100%',
-    flex:1
+    flex: 1,
   },
   imgLogo: {
     position: 'absolute',
@@ -128,35 +143,52 @@ const styles = StyleSheet.create({
     top: 70,
   },
   inputEmail: {
-    width: 370,
+    width: SCREEN_WIDTH - 20,
     minHeight: 50,
-    paddingRight:10,
-    paddingLeft:10,
+    paddingLeft: 10,
     top: 294,
     position: 'absolute',
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 5,
-    flex:1,
+    flex: 1,
+    ...Platform.select({
+      android:{
+        marginLeft:10,
+        marginRight:10
+      }
+    })
   },
   inputPass: {
-    flex:1,
-    width: 370,
+    flex: 1,
+    width: SCREEN_WIDTH - 20,
     minHeight: 50,
-    alignItems: "center",
+    alignItems: 'center',
     paddingRight: 50,
     top: 355,
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 5,
     flexDirection: 'row',
-    paddingLeft:10
+    paddingLeft: 10,
+    ...Platform.select({
+      android:{
+        marginLeft:10,
+        marginRight:10
+      }
+    })
   },
   btnLogin: {
     position: 'absolute',
-    width: 370,
+    width: SCREEN_WIDTH - 20,
     height: 46,
     top: 440,
     borderRadius: 5,
     backgroundColor: '#016243',
+    ...Platform.select({
+      android:{
+        marginLeft:10,
+        marginRight:10
+      }
+    })
   },
   textLogin: {
     width: 100,
@@ -195,7 +227,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: '400',
     top: 10,
-    right:5,
+    right: 5,
     fontFamily: 'Chakra-Petch',
   },
   textFace: {

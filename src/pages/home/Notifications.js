@@ -6,7 +6,7 @@ import {
   View,
   FlatList,
   Modal,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import {
   API_NOTIFICATIONS,
@@ -14,79 +14,130 @@ import {
 } from '../../repository/Type';
 import {useAppSelector} from '../../redux/store';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n/i18n';
-const Notifications = (props) => {
+export const PAGE_SIZE = 15;
+const Notifications = props => {
   const {navigation} = props;
-  const accessToken = useAppSelector(state => state.auth.accessToken);
-  const [dataNotifications, setDataNotifications] = useState();
+  const accessToken = useAppSelector(state => state.auth.access_token);
+
+  const [dataNotifications, setDataNotifications] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+
   const [unseen, setUnseen] = useState();
-  const [markAllNotifications,setMarkAllNotifications] = useState()
-  const [isLoading,setIsLoading] = useState(true)
-  const [state, setState] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  const [markAllNotifications, setMarkAllNotifications] = useState();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [meta, setMeta] = useState({
+    total_record: 0,
+    current_page: 0,
+    next_page: 0,
+    items_per_page: 0,
+  });
+
+  const onEndReached = () => {
+    !dataNotifications.length < PAGE_SIZE && setIsLoading(true);
+    if (meta.next_page > meta.current_page || dataNotifications.length < PAGE_SIZE) {
+      fetch(API_NOTIFICATIONS, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token:accessToken,
+          page: meta.next_page,
+          items_per_page: PAGE_SIZE,
+        }),
+      })
+        .then(respone => respone.json())
+        .then(json => {
+          if (json.result?.status) {
+            let data = json.result.data.data;
+            let meta = json.result.data.meta;
+            setDataNotifications([...dataNotifications, ...data]);
+            setMeta(meta);
+            setIsLoading(false);
+          }
+        })
+        .catch(err => console.log(err));
+    }
+  };
+
   useEffect(() => {
-     function getNotification(){
-     fetch(API_NOTIFICATIONS, {
+    function getNotification() {
+      fetch(API_NOTIFICATIONS, {
+        method: 'POST',
+        headers: {
+          Accept: 'applicaton/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: accessToken,
+          page: currentPage,
+          items_per_page: PAGE_SIZE,
+        }),
+      })
+        .then(respone => respone.json())
+        .then(json => {
+          if (json.result?.status) {
+            const data = json.result.data.data;
+            const dataUnseen = json.result.data.unseen;
+            const meta = json.result.data.meta;
+            setDataNotifications(data);
+            setUnseen(dataUnseen);
+            setMeta(meta)
+          } else {
+            console.log('Failed!!!!');
+          }
+        })
+        .catch(error => console.log('Error: ', error))
+    }
+    getNotification();
+  }, [meta]);
+
+  const handleMarkAll = () => {
+    fetch(API_SEEN_ALL_NOTIFICATIONS, {
       method: 'POST',
       headers: {
-        Accept: 'applicaton/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         access_token: accessToken,
       }),
     })
-      .then(respone => respone.json())
+      .then(response => response.json())
       .then(json => {
         if (json.result?.status) {
-          const data = json.result.data.data;
-          const dataUnseen = json.result.data.unseen;
-          setDataNotifications(data);
-          setUnseen(dataUnseen);
-        } else {
-          console.log('Failed!!!!');
+          const data = json.result.data;
+          setMarkAllNotifications(data);
         }
       })
-      .catch(error => console.log('Error: ', error))
-      .finally(() => setIsLoading(false))
-    };
-    getNotification();
-  }, []);
-  
-  const handleMarkAll = () =>{
-     fetch(API_SEEN_ALL_NOTIFICATIONS,{
-      method:'POST',
-      headers:{
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        access_token: accessToken,
-      })
-    })
-    .then((response) => response.json())
-    .then((json) =>{
-      if(json.result?.status){
-        const data = json.result.data
-        setMarkAllNotifications(data)
-      }
-    })
-    .catch((error) => console.log('Error: ',error))
-    setModalVisible(false)
-  }
+      .catch(error => console.log('Error: ', error));
+    setModalVisible(false);
+  };
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({item}) => {
     return (
-      <View style={item?.status === 'seen' ? styles.viewSeen : styles.viewUnseen}>
+      <View
+        style={item?.status === 'seen' ? styles.viewSeen : styles.viewUnseen}>
         <TouchableOpacity
-          onPress={() => navigation.navigate('DetailNotification', { message: item.message })}>
-          <View style={{ flexDirection: 'row', padding: 10, bottom: 10 }}>
+          onPress={() =>
+            navigation.navigate('DetailNotification', {message_id: item.id})
+          }>
+          <View style={{flexDirection: 'row', padding: 10, bottom: 10}}>
             <View style={styles.viewIcon}>
               <Ionicons name="notifications" size={30} color="white" />
             </View>
-            <View style={{ top: 5, left: 5 }}>
-              <Text style={{ color: 'black', fontFamily: 'Chakra-Petch', fontSize: 20 }}>
+            <View style={{top: 5, left: 5}}>
+              <Text
+                style={{
+                  color: 'black',
+                  fontFamily: 'Chakra-Petch',
+                  fontSize: 20,
+                }}>
                 {item.subject}
               </Text>
               <Text
@@ -97,22 +148,22 @@ const Notifications = (props) => {
                   paddingRight: 70,
                 }}>
                 {item.message}
-              </Text> 
+              </Text>
               <Text
                 style={{
                   color: '#595959',
                   fontSize: 13,
-                  maxWidth: '100%', 
+                  maxWidth: '100%',
                 }}>
                 {item.create_date}
               </Text>
             </View>
           </View>
         </TouchableOpacity>
-        <View style={{ height: 1, backgroundColor: 'white', width: '100%' }} />
+        <View style={{height: 1, backgroundColor: 'white', width: '100%'}} />
       </View>
     );
-  }
+  };
   return (
     <>
       <View style={styles.container}>
@@ -120,20 +171,21 @@ const Notifications = (props) => {
           <Text style={styles.textHeader}>{i18n.t('Notifications')}</Text>
         </View>
         <TouchableOpacity
-          style={{marginLeft: 280, margin: 10}}
+          style={{paddingLeft: '65%', margin: 10}}
           onPress={() => setModalVisible(true)}>
           <Text style={{fontSize: 17, color: '#016243'}}>
             {i18n.t('ReadAll')} ({unseen})
           </Text>
         </TouchableOpacity>
-        {isLoading ? <ActivityIndicator size={30}/> : (
-          <FlatList
+        <FlatList
           data={dataNotifications}
           renderItem={renderItem}
           keyExtractor={item => `${item.id}`}
+          onEndReached={({distanceFromEnd}) => {
+            onEndReached();
+          }}
+          ListFooterComponent={isLoading ? <ActivityIndicator /> : undefined}
         />
-        )}
-
       </View>
       <Modal
         animationType="slide"
@@ -156,7 +208,7 @@ const Notifications = (props) => {
                 justifyContent: 'center',
               }}>
               <TouchableOpacity
-              onPress={()=>handleMarkAll()}
+                onPress={() => handleMarkAll()}
                 style={styles.btnModal}>
                 <Text style={styles.textStyle}>{i18n.t('Agree')}</Text>
               </TouchableOpacity>
@@ -194,7 +246,7 @@ const styles = StyleSheet.create({
   textHeader: {
     fontSize: 20,
     color: 'white',
-    fontFamily:'Chakra-Petch'
+    fontFamily: 'Chakra-Petch',
   },
   viewIcon: {
     height: 50,
@@ -217,14 +269,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     marginLeft: 10,
-    fontFamily:'Chakra-Petch',
+    fontFamily: 'Chakra-Petch',
   },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  btnModal:{
+  btnModal: {
     backgroundColor: '#016243',
     borderRadius: 5,
     marginRight: 20,

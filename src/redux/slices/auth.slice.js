@@ -2,7 +2,6 @@ import {createSlice} from '@reduxjs/toolkit';
 
 const initialState = {
   isSignedIn: false,
-  accessToken: '',
 };
 
 export const authSlice = createSlice({
@@ -11,14 +10,18 @@ export const authSlice = createSlice({
   //đối tượng chứa các reducer để xử lí các action trong slice
   reducers: {
     setUser: (state, action) => {
-      state.isSignedIn = true;
-      state.accessToken = action.payload;
+      state = {
+        ...state,
+        isSignedIn: true,
+        ...action.payload,
+      };
+      return state;
     },
     logout: () => initialState,
   },
 });
-export const {setUser,logout} = authSlice.actions
-export default authSlice.reducer
+export const {setUser, logout} = authSlice.actions;
+export default authSlice.reducer;
 //reducer xử lí các action(setUser,logout)
 // const {reducer, actions} = authSlice;
 // export const {setUser, logout} = actions;

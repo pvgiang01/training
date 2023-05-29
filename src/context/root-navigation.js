@@ -10,13 +10,16 @@ import Application from '../pages/home/Application';
 import SettingScreen from '../pages/home/Setting';
 import DetailNotification from '../pages/detail/DetailNotification';
 import LanguageScreen from '../pages/home/Language';
-import WorkScreen from '../pages/home/Work';
+import WorkScreen from '../pages/work/Work';
 import LeaveScreen from '../pages/leave/Leave';
 import CreateLeave from '../pages/leave/Create_leave';
 import TabViewChild from '../pages/child/Child';
 import TabViewProject from '../pages/project/GoProject';
 import CreateChild from '../pages/child/Create_Child';
 import CreateProject from '../pages/project/Create_Project';
+import DetailWork from '../pages/work/DetailWork';
+import DetailLeave from '../pages/leave/DetailLeave';
+import DetailChild from '../pages/child/DetailChild';
 const Stack = createNativeStackNavigator();
 
 const RootNav = () => {
@@ -94,6 +97,16 @@ const RootNav = () => {
               headerTitleStyle: {fontFamily: 'Chakra-Petch'},
             }}
           />
+           <Stack.Screen
+            name="DetailWork"
+            component={DetailWork}
+            options={{
+              headerTitle: 'Bảng công',
+              headerTintColor: 'white',
+              headerStyle: {backgroundColor: '#016243'},
+              headerTitleStyle: {fontFamily: 'Chakra-Petch'},
+            }}
+          />
           <Stack.Screen
             name="LanguageScreen"
             component={LanguageScreen}
@@ -134,6 +147,16 @@ const RootNav = () => {
               headerTitleStyle: {fontFamily: 'Chakra-Petch'},
             }}
           />
+           <Stack.Screen
+            name="DetailChild"
+            component={DetailChild}
+            options={{
+              headerTitle: 'Chế độ con nhỏ',
+              headerTintColor: 'white',
+              headerStyle: {backgroundColor: '#016243'},
+              headerTitleStyle: {fontFamily: 'Chakra-Petch'},
+            }}
+          />
           <Stack.Screen
             name="TabViewProject"
             component={TabViewProject}
@@ -159,6 +182,16 @@ const RootNav = () => {
             component={CreateProject}
             options={{
               headerTitle: 'Tạo mới đăng kí đi dự án',
+              headerTintColor: 'white',
+              headerStyle: {backgroundColor: '#016243'},
+              headerTitleStyle: {fontFamily: 'Chakra-Petch'},
+            }}
+          />
+          <Stack.Screen
+            name="DetailLeave"
+            component={DetailLeave}
+            options={{
+              headerTitle: 'Xin nghỉ',
               headerTintColor: 'white',
               headerStyle: {backgroundColor: '#016243'},
               headerTitleStyle: {fontFamily: 'Chakra-Petch'},

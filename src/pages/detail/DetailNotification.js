@@ -4,54 +4,54 @@ import {useAppSelector} from '../../redux/store';
 import {API_DETAIL_NOTIFICATIONS} from '../../repository/Type';
 import moment from 'moment';
 const DetailNotification = ({route}) => {
-  const access_token = useAppSelector(state => state.auth.accessToken);
-  let {message} = route.params;
+  const access_token = useAppSelector(state => state.auth.access_token);
+  const message_id = route.params.message_id;
   const [dataNotifications, setDataNotifications] = useState([]);
 
   useEffect(() => {
-    async function getDetailNotification(){
-     await fetch(API_DETAIL_NOTIFICATIONS, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        access_token: access_token,
-        message_id: message,
-      }),
-    })
-      .then(response => response.json())
-      .then(json => {
-        if (json.result?.status) {
-          const data = json.result.data;
-          setDataNotifications(data);
-        } else {
-          console.log('Failed!!');
-        }
+    async function getDetailNotification() {
+      await fetch(API_DETAIL_NOTIFICATIONS, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: access_token,
+          message_id: message_id,
+        }),
       })
-      .catch(error => console.log('Error: ', error));
-    };
+        .then(response => response.json())
+        .then(json => {
+          if (json.result?.status) {
+            const data = json.result.data;
+            setDataNotifications(data);
+          } else {
+            console.log('Failed!!');
+          }
+        })
+        .catch(error => console.log('Error: ', error));
+    }
     getDetailNotification();
   }, []);
-  convertDate = /(\d{1,2})\/(\d{1,2})\/(\d{4})/; // Tạo biểu thức chính quy để tìm ngày
-  const match = message.match(convertDate); // Tìm kiếm ngày trong chuỗi
-  let date = '';
-  let fomatDate = '';
-  if (match) {
-    const day = match[1];
-    const month = match[2];
-    const year = match[3];
-    date = new Date(`${year}-${month}-${day}`); // Tạo đối tượng Date từ ngày, tháng, năm
-    // console.log(date.toLocaleDateString()); // Hiển thị ngày dưới dạng chuỗi địa phương (VD: "31/05/2023" ở Việt Nam)
-    fomatDate = moment(date).format('DD/MM/YYYY')
-  }
+  // convertDate = /(\d{1,2})\/(\d{1,2})\/(\d{4})/; // Tạo biểu thức chính quy để tìm ngày
+  // const match = message.match(convertDate); // Tìm kiếm ngày trong chuỗi
+  // let date = '';
+  // let fomatDate = '';
+  // if (match) {
+  //   const day = match[1];
+  //   const month = match[2];
+  //   const year = match[3];
+  //   date = new Date(`${year}-${month}-${day}`); // Tạo đối tượng Date từ ngày, tháng, năm
+  //   // console.log(date.toLocaleDateString()); // Hiển thị ngày dưới dạng chuỗi địa phương (VD: "31/05/2023" ở Việt Nam)
+  //   fomatDate = moment(date).format('DD/MM/YYYY');
+  // }
 
   return (
     <View style={styles.container}>
       <View style={styles.viewDate}>
         {/* <Text style={styles.textHeader}>Giải trình công</Text> */}
-        <Text style={styles.textDate}>Ngày {fomatDate}</Text>
+        <Text style={styles.textDate}>Ngày</Text>
       </View>
       <View style={{margin: 10, flexDirection: 'row'}}>
         <Text style={styles.text}>Nhân sự:</Text>
@@ -65,7 +65,7 @@ const DetailNotification = ({route}) => {
           <Text style={styles.text}>Giờ vào:</Text>
         </View>
         <View
-          style={{margin: 10, flexDirection: 'row', top: 20, marginLeft: 120}}>
+          style={{margin: 10, flexDirection: 'row', top: 20, marginLeft: 130}}>
           <Text style={styles.text}>Giờ ra:</Text>
         </View>
       </View>
@@ -77,7 +77,7 @@ const DetailNotification = ({route}) => {
         <Text style={styles.text}>Trạng thái:</Text>
         <Text
           style={{
-            fontSize: 20,
+            fontSize: 16,
             color: 'black',
             fontWeight: '400',
             marginLeft: 10,
@@ -102,12 +102,12 @@ const styles = StyleSheet.create({
   },
   viewDate: {
     alignItems: 'center',
-    marginTop:10
+    marginTop: 10,
   },
-  textHeader:{
-    fontFamily:'Chakra-Petch',
-    fontSize:22,
-    color:'#016243'
+  textHeader: {
+    fontFamily: 'Chakra-Petch',
+    fontSize: 22,
+    color: '#016243',
   },
   textDate: {
     fontSize: 20,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   text: {
-    fontSize: 20,
+    fontSize: 16,
     color: 'black',
     fontFamily: 'Chakra-Petch',
   },

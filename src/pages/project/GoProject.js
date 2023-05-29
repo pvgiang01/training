@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {View, useWindowDimensions, StyleSheet,TouchableOpacity} from 'react-native';
-import {Text} from 'react-native-svg';
 import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 const FirstRoute = ({navigation}) => (

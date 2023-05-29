@@ -4,34 +4,34 @@ import {useAppSelector} from '../../redux/store';
 import {API_DETAIL_EMPLOYEE} from '../../repository/Type';
 import i18n from '../../i18n/i18n';
 const DetailScreen = ({route}) => {
-  const access_token = useAppSelector(state => state.auth.accessToken);
+  const access_token = useAppSelector(state => state.auth.access_token);
   let employee_id = route.params.id;
   const [dataEmployee, setDataEmployee] = useState([]);
 
   useEffect(() => {
-    async function getDetailEmployee(){
-     await fetch(API_DETAIL_EMPLOYEE, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        access_token: access_token,
-        employee_id: employee_id,
-      }),
-    })
-      .then(response => response.json())
-      .then(json => {
-        if (json.result?.code == 200) {
-          const data = json.result.data.app_data;
-          setDataEmployee(data);
-        } else {
-          console.log('failed!!!');
-        }
+    async function getDetailEmployee() {
+      await fetch(API_DETAIL_EMPLOYEE, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: access_token,
+          employee_id: employee_id,
+        }),
       })
-      .catch(err => console.log(err));
-    };
+        .then(response => response.json())
+        .then(json => {
+          if (json.result?.code == 200) {
+            const data = json.result.data.app_data;
+            setDataEmployee(data);
+          } else {
+            console.log('failed!!!');
+          }
+        })
+        .catch(err => console.log(err));
+    }
     getDetailEmployee();
   }, []);
   return (
@@ -47,30 +47,29 @@ const DetailScreen = ({route}) => {
             <Text style={{color: 'red', fontWeight: 'bold', fontSize: 20}}>
               {dataEmployee?.name?.value || ''}
             </Text>
-              <Text style={{color: '#404040', fontSize: 15,marginTop:20}}>
-                {dataEmployee?.code?.value || ''}
-              </Text>
-              <Text style={{color: '#404040', fontSize: 15}}>
-                {dataEmployee?.department?.value?.name || ''}
-              </Text>
-              <Text style={{color: '#404040', fontSize: 15}}>
-                {dataEmployee?.position?.value || ''}
-              </Text>
-              <Text
-                style={{
-                  color: '#404040',
-                  fontSize: 15,
-                  flexWrap:'wrap',
-                  textAlign:'justify',
-                  maxWidth: "100%"
-                }}>
-                {dataEmployee?.company?.value?.name || ''}
-              </Text>
+            <Text style={{color: '#404040', fontSize: 15, marginTop: 20}}>
+              {dataEmployee?.code?.value || ''}
+            </Text>
+            <Text style={{color: '#404040', fontSize: 15}}>
+              {dataEmployee?.department?.value?.name || ''}
+            </Text>
+            <Text style={{color: '#404040', fontSize: 15}}>
+              {dataEmployee?.position?.value || ''}
+            </Text>
+            <Text
+              style={{
+                color: '#404040',
+                fontSize: 15,
+                flexWrap: 'wrap',
+                textAlign: 'justify',
+                maxWidth: '100%',
+              }}>
+              {dataEmployee?.company?.value?.name || ''}
+            </Text>
           </View>
-         
         </View>
         <View style={styles.line}></View>
-        <View style={{marginTop:30,marginLeft:15}}>
+        <View style={{marginTop: 30, marginLeft: 15}}>
           <View style={{flexDirection: 'row', bottom: 15}}>
             <Text style={{color: '#404040', fontSize: 15, fontWeight: 'bold'}}>
               {i18n.t('MobilePhone')}
@@ -86,14 +85,16 @@ const DetailScreen = ({route}) => {
             </Text>
           </View>
           <View style={{flexDirection: 'row'}}>
-            <Text style={[styles.textFlat, {marginTop: 10}]}>{i18n.t('Birthday')}</Text>
+            <Text style={[styles.textFlat, {marginTop: 10}]}>
+              {i18n.t('Birthday')}
+            </Text>
             <Text
               style={{
                 marginLeft: 60,
                 marginTop: 10,
                 color: '#262626',
                 fontSize: 15,
-                marginBottom:10
+                marginBottom: 10,
               }}>
               {dataEmployee?.birthday?.value || ''}
             </Text>
@@ -106,8 +107,6 @@ const DetailScreen = ({route}) => {
 export default DetailScreen;
 
 const styles = StyleSheet.create({
-
-
   container: {
     flex: 1,
     backgroundColor: '#ebebeb',

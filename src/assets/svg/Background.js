@@ -1,5 +1,8 @@
 import * as React from "react"
+import {Dimensions} from 'react-native'
 import Svg, { Path, Defs, Pattern, Use, Image } from "react-native-svg"
+const SCREEN_WIDTH = Dimensions.get('screen').width;
+const SCREEN_HEIGHT = Dimensions.get('screen').height;
 function SvgBackground(props) {
     return (
       <Svg

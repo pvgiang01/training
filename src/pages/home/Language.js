@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   },
   text:{
     fontFamily:'Chakra-Petch',
-    fontSize:21,
+    fontSize:16,
     margin:10,
     left:20,
     color:'black'

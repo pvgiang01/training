@@ -1,45 +1,73 @@
+import moment from 'moment';
 import React, {useEffect, useState} from 'react';
 import {
-  View,
-  Text,
+  Alert,
+  FlatList,
+  Keyboard,
+  ToastAndroid,
   StyleSheet,
-  ScrollView,
+  Text,
   TextInput,
   TouchableOpacity,
-  Modal,
-  Dimensions,
-  FlatList,
-  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import SvgCalendar from '../../assets/svg/CalendarSvg';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import Checkbox from '../../component/Checkbox';
+import DatePicker from '../../component/DatePicker';
+import Dropdown from '../../component/Dropdown';
+import ListItem from '../../component/ListItem';
 import {useAppSelector} from '../../redux/store';
 import {
+  API_CREATE_LEAVE,
+  API_GET_LEAVE_LINES,
   API_GET_REMAIN_LEAVE,
   API_GET_TYPE_LEAVE,
-  API_CREATE_LEAVE,
 } from '../../repository/Type';
-import {Calendar} from 'react-native-calendars';
-import localConfigCalendar from '../../component/LocalConfig';
-import moment from 'moment';
-import {eachDayOfInterval, format} from 'date-fns';
-export const CreateLeave = ({navigation}) => {
-  const access_token = useAppSelector(state => state.auth.accessToken);
-  const [isSelected, setIsSelected] = useState(false);
-  const [note, setNote] = useState();
-  const [dataLeave, setDataLeave] = useState();
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showCalendar2, setShowCalendar2] = useState(false);
-  const [fromDate, setFormDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [typeLeave, setTypeLeave] = useState('');
-  const [selectedTypeLeave, setSelectedTypeLeave] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState(false);
-  const [dropdownValue, setDropdownValue] = useState([]);
+import Entypo from 'react-native-vector-icons/Entypo'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
+import {useNavigation} from '@react-navigation/native';
+import SvgSend from '../../assets/svg/SendSvg';
+export const CreateLeave = () => {
+  const access_token = useAppSelector(state => state.auth.access_token);
+  const auth = useAppSelector(state => state.auth);
+  const navigation = useNavigation();
 
-  const currentDate = moment().format('DD/MM/YYYY');
-  localConfigCalendar;
+  const [fromDate, setFromDate] = useState(moment().format('YYYY-MM-DD'));
+  const [showCalendarFromDate, setShowCalendarFromDate] = useState(false);
+
+  const [toDate, setToDate] = useState(moment().format('YYYY-MM-DD'));
+  const [showCalendarToDate, setShowCalendarToDate] = useState(false);
+
+  const [usedTimeOffFund, setUsedTimeOffFund] = useState(false);
+  const [visibleModalType, setVisibleModalType] = useState(false);
+  
+  const [typeId, setTypeId] = useState();
+  const [typeLeave, setTypeLeave] = useState([]);
+
+  const [dataLeave, setDataLeave] = useState();
+  const [used_time_off_fund,setUsed_time_off_fund] = useState(false);
+
+  const [lines, setLines] = useState([]);
+  const [isVisibleModalLine, setVisibleModalLine] = useState(false);
+
+  const [currentLine, setCurrentLine] = useState({});
+  const [note, setNote] = useState();
+
+  const lineType = [
+    {
+      label: 'Toàn ca',
+      value: 'full',
+    },
+    {
+      label: 'Trước ca',
+      value: 'before',
+    },
+    {
+      label: 'Sau ca',
+      value: 'after',
+    },
+  ];
 
   useEffect(() => {
     function getRemainLeave() {
@@ -75,24 +103,53 @@ export const CreateLeave = ({navigation}) => {
         },
         body: JSON.stringify({
           access_token: access_token,
+          used_time_off_fund:used_time_off_fund
         }),
       })
         .then(response => response.json())
         .then(json => {
           if (json.result?.status) {
             const data = json.result.data.app_data;
-            const newOptions = data.map(item => ({
-              label: item.name,
-              value: item.id,
-            }));
-            setTypeLeave(newOptions);
+            setTypeLeave(data);
           }
         })
         .catch(error => console.log('Error: ', error));
     }
     getTypeLeave();
-  }, []);
-  const handleCreateLeave = () => {
+  }, [used_time_off_fund]);
+
+  useEffect(() => {
+    function getLeaveLines() {
+      fetch(API_GET_LEAVE_LINES, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          access_token: access_token,
+          from_date: fromDate,
+          to_date: toDate,
+          employee_id: auth.employee_id.id,
+        }),
+      })
+        .then(response => response.json())
+        .then(json => {
+          if (json.result?.status) {
+            const data = json.result.data.data;
+            const result = data.map(item => ({
+              date: item.date.value,
+              type: 'full',
+            }));
+            setLines(result);
+          }
+        })
+        .catch(error => console.log('Error: ', error));
+    }
+    getLeaveLines();
+  }, [fromDate, toDate]);
+
+  const handleCreateLeave = ({action_send}) => {
     fetch(API_CREATE_LEAVE, {
       method: 'POST',
       headers: {
@@ -100,451 +157,363 @@ export const CreateLeave = ({navigation}) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        access_token: access_token,
-        empolyee_id: empolyee_id,
-        type_id: selectedTypeLeave,
-        date_from: fromDate,
-        date_to: toDate,
-        used_time_off_fund: isSelected,
+        access_token,
+        employee_id: auth.employee_id.id,
+        type_id: typeId,
+        from_date: fromDate,
+        to_date: toDate,
+        used_time_off_fund: usedTimeOffFund,
         note: note,
-        lines: {
-          date: date,
-          type: type,
-        },
+        action_send: action_send,
+        lines: lines,
       }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.result.code == 200) {
+          navigation.goBack();
+        } else {
+          // Alert.alert(data.result.message);
+          ToastAndroid.show(data.result.message, ToastAndroid.SHORT);
+
+        }
+      })
+      .catch(e => {
+        console.warn(e);
+      });
+  };
+
+  const handleSelectTypeLeave = value => {
+    setTypeId(value);
+    setVisibleModalType(false);
+  };
+
+  const onPressLineItem = item => {
+    setVisibleModalLine(true);
+    setCurrentLine(item);
+  };
+
+  const onValueChangeLineItem = value => {
+    const updatedLines = lines.map(line => {
+      if (line.date == currentLine.date) {
+        return {...line, type: value};
+      }
+      return line;
     });
+    setLines(updatedLines);
+    setVisibleModalLine(false);
   };
-  const handlePressFormDate = () => {
-    setShowCalendar(true);
-    setFormDate('');
+
+  const renderLineItem = ({item}) => {
+    const findName = lineType.find(e => e.value == item.type);
+
+    return (
+      <>
+        <View style={styles.lineItem}>
+          <Text style={styles.textItem}>
+            {moment(item.date, 'YYYY-MM-DD').format('DD/MM/YYYY')}
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              onPressLineItem(item);
+            }}
+            style={styles.viewLineItemRight}>
+            <Text style={styles.lineStatus}>{findName?.label}</Text>
+            <Entypo name="chevron-thin-down" size={14} color="#3F3F3F"/>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
   };
-  const handlePressToDate = () => {
-    setShowCalendar2(true);
-    setToDate('');
+
+  const checkValidate = () => {
+    Keyboard.dismiss();
+    if (moment(toDate).diff(moment(fromDate), 'days') < 0) {
+      return ToastAndroid.show('Từ ngày không thể lớn hơn đến ngày!', ToastAndroid.SHORT);
+    }
+    if (lines.length === 0) {
+      ToastAndroid.show('Chi tiết đơn xin nghỉ không có!', ToastAndroid.SHORT);
+
+    }
+    if (!note || note?.trim() == '') {
+      return ToastAndroid.show('Trường lý do không được để trống!', ToastAndroid.SHORT);
+    }
+    if (!typeId) {
+      return ToastAndroid.show('Chưa chọn loại nghỉ phép!', ToastAndroid.SHORT);
+    }
+    return true;
   };
-  const handleFromDayPress = day => {
-    setShowCalendar(false);
-    setFormDate(day.dateString);
-  };
-  const handleToDayPress = day => {
-    setShowCalendar2(false);
-    setToDate(day.dateString);
-  };
-  const getDaysInRange = day => {
-    if (fromDate && toDate) {
-      const fromDateObj = new Date(fromDate);
-      const toDateObj = new Date(toDate);
-      const days = eachDayOfInterval({start: fromDateObj, end: toDateObj});
-      setDropdownValue([]);
-      return days;
-    } else if (fromDate) {
-      return [new Date(fromDate)];
-    } else {
-      return [];
+
+  const onSave = () => {
+    if (checkValidate()) {
+      handleCreateLeave({action_send: false});
     }
   };
-  const handleSelectTypeLeave = value => {
-    setSelectedTypeLeave(value);
-    setModalVisible(false);
-  };
-  const handleDropdownChange = value => {
-    setDropdownValue(value);
-    setModalType(false);
-  };
-  return (
-    <View style={styles.container}>
-      <ScrollView>
-        <View style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Nhân sự:</Text>
-          <Text style={styles.textItem}></Text>
-        </View>
-        <View style={styles.line} />
-        <View style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Phòng ban:</Text>
-          <Text style={styles.textItem}></Text>
-        </View>
-        <View style={styles.line} />
-        <TouchableOpacity
-          onPress={() => handlePressFormDate()}
-          style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Từ ngày:</Text>
-          <Text style={styles.textItem}>{fromDate || currentDate}</Text>
-          <FontAwesome
-            name="calendar"
-            color="orange"
-            size={20}
-            style={{top: 5, marginLeft: 180}}
-          />
-          <Modal visible={showCalendar} transparent animationType="fade">
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                {showCalendar && (
-                  <Calendar
-                    onDayPress={handleFromDayPress}
-                    hideExtraDays
-                    theme={{
-                      textDayFontFamily: 'Chakra-Petch',
-                      textMonthFontFamily: 'ChakraPetch-Light',
-                      textDayFontSize: 20,
-                      textMonthFontSize: 20,
-                      textDayHeaderFontSize: 15,
-                    }}
-                    minDate={null}
-                    current={Date()}
-                    markingType="period"
-                    markedDates={{[fromDate]: {selected: true}}}
-                  />
-                )}
-              </View>
-            </View>
-          </Modal>
-        </TouchableOpacity>
-        <View style={styles.line} />
-        <TouchableOpacity
-          onPress={() => handlePressToDate()}
-          style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Đến ngày:</Text>
-          <Text style={styles.textItem}>{toDate || currentDate}</Text>
-          <FontAwesome
-            name="calendar"
-            color="orange"
-            size={20}
-            style={{top: 5, marginLeft: 170}}
-          />
-          <Modal visible={showCalendar2} transparent animationType="fade">
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                {showCalendar2 && (
-                  <Calendar
-                    onDayPress={handleToDayPress}
-                    hideExtraDays
-                    minDate={null}
-                    theme={{
-                      textDayFontFamily: 'Chakra-Petch',
-                      textMonthFontFamily: 'ChakraPetch-Light',
-                      textDayFontSize: 20,
-                      textMonthFontSize: 20,
-                      textDayHeaderFontSize: 15,
-                    }}
-                    current={Date()}
-                    markingType="period"
-                    markedDates={{[toDate]: {selected: true}}}
-                  />
-                )}
-              </View>
-            </View>
-          </Modal>
-        </TouchableOpacity>
-        <View style={styles.line} />
-        <View style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Số ngày nghỉ còn lại:</Text>
-          <Text style={styles.textItem}>{dataLeave?.remain_leave}</Text>
-        </View>
-        <View style={styles.line} />
-        <View style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Sử dụng quỹ nghỉ bù:</Text>
-          <CheckBox
-            style={{top: 5, marginLeft: 170}}
-            onValueChange={newValue => setIsSelected(newValue)}
-            disabled={false}
-            value={isSelected}
-            tintColor={{true: 'blue', false: 'white'}}
-          />
-        </View>
-        <View style={styles.line} />
-        {isSelected && (
-          <View style={{margin: 10, flexDirection: 'row'}}>
-            <Text style={styles.text}>Số giờ nghỉ bù còn lại:</Text>
-            <Text style={styles.textItem}>{dataLeave?.remaining_hours}</Text>
-          </View>
-        )}
-        <View style={styles.line} />
-        <View style={{margin: 10, flexDirection: 'row'}}>
-          <Text style={styles.text}>Loại nghỉ phép:</Text>
-          <TouchableOpacity
-            style={styles.input}
-            onPress={() => setModalVisible(true)}>
-            {selectedTypeLeave.label ? (
-              <Text style={styles.textItem}>{selectedTypeLeave.label}</Text>
-            ) : (
-              <Text style={styles.placeholder}>Chọn loại nghỉ phép</Text>
-            )}
-            <FontAwesome
-              name="caret-down"
-              style={styles.icon}
-              size={20}
-              color="#3F3F3F"
-            />
-          </TouchableOpacity>
-          <Modal
-            animationType="fade"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)}>
-            <TouchableOpacity
-              style={styles.modalBackground}
-              onPress={() => setModalVisible(false)}>
-              <View style={styles.modalContainer}>
-                <FlatList
-                  data={typeLeave}
-                  keyExtractor={(item, index) => index.toString()}
-                  renderItem={({item}) => (
-                    <TouchableOpacity
-                      style={styles.modalItem}
-                      onPress={() => handleSelectTypeLeave(item.id)}>
-                      <Text style={styles.modalItemText}>{item.label}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        </View>
-        <View
-          style={{
-            height: 3,
-            width: 390,
-            marginLeft: 10,
-            backgroundColor: '#016243',
-          }}
-        />
-        <View
-          style={{
-            backgroundColor: '#d9d9d9',
-            marginLeft: 10,
-            flexDirection: 'row',
-            width: 390,
-            height: 50,
-          }}>
-          <Text style={styles.textLeave}>Ngày</Text>
-          <Text style={styles.textLeave}>Buổi nghỉ</Text>
-        </View>
-        <View
-          style={{paddingHorizontal: 60, marginTop: 10, flexDirection: 'row'}}>
-          {fromDate && toDate && (
-            <FlatList
-              data={getDaysInRange()}
-              renderItem={({item}) => (
-                <View style={{marginTop: 10, flexDirection: 'row'}}>
-                  <Text style={styles.textItem}>
-                    {format(item, 'dd/MM/yyyy')}
-                  </Text>
-                  <TouchableOpacity
-                    style={{paddingHorizontal: 60}}
-                    onPress={() => setModalType(true)}>
-                    <Text style={styles.textItem}>{dropdownValue}</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              keyExtractor={item => format(item, 'yyyy-MM-dd')}
-            />
-          )}
-          {(!fromDate || !toDate) && (
-            <Text style={styles.textItem}>
-              {format(new Date(), 'dd/MM/yyyy')}
-            </Text>
-          )}
 
-          <Modal
-            visible={modalType}
-            transparent={true}
-            onRequestClose={() => setModalType(false)}
-            animationType="slide">
-            <View style={styles.centeredView}>
-              <View style={styles.modalView2}>
-                <TouchableOpacity
-                  onPress={() => handleDropdownChange('Toàn ca')}>
-                  <Text style={styles.text}>Toàn ca</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDropdownChange('Sau ca')}>
-                  <Text style={styles.text}>Sau ca</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => handleDropdownChange('Trước ca')}>
-                  <Text style={styles.text}>Trước ca</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-        </View>
-        <View style={styles.line2} />
-        <View style={{margin: 10}}>
-          <Text style={styles.text}>Lý do:</Text>
-          <TextInput
-            style={styles.textInput}
-            multiline={true}
-            numberOfLines={4}
-            onChangeText={text => setNote(text)}
+  const onSent = () => {
+    if (checkValidate()) {
+      handleCreateLeave({action_send: true});
+    }
+  };
+  const onClose = () => {
+    navigation.goBack();
+  };
+
+  return (
+    <>
+      <View style={styles.container}>
+        <KeyboardAwareScrollView
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps={'handled'}>
+          <ListItem
+            title={'Nhân sự'}
+            subtitle={
+              auth?.employee_id?.x_employee_code + ' - ' + auth?.employee_id?.name
+            }
           />
+          <ListItem title={'Phòng ban'} subtitle={auth?.department_id?.name} />
+          <ListItem
+            title={'Từ ngày'}
+            subtitle={moment(fromDate, 'YYYY-MM-DD').format('DD/MM/YYYY')}
+            onPress={() => {
+              setShowCalendarFromDate(true);
+            }}
+            rightComponent={<SvgCalendar />}
+          />
+          <ListItem
+            title={'Đến ngày'}
+            subtitle={moment(toDate, 'YYYY-MM-DD').format('DD/MM/YYYY')}
+            onPress={() => {
+              setShowCalendarToDate(true);
+            }}
+            rightComponent={<SvgCalendar/>}
+          />
+          <ListItem
+            title={'Số ngày nghỉ còn lại'}
+            subtitle={dataLeave?.remain_leave}
+          />
+          <ListItem
+            title={'Sử dụng quỹ nghỉ bù'}
+            rightComponent={
+              <Checkbox
+                onChange={newValue => setUsedTimeOffFund(newValue)}
+                value={usedTimeOffFund}
+                disabled={false}
+              />
+            }
+          />
+          {usedTimeOffFund && (
+            <ListItem
+              title={'Số giờ nghỉ bù còn lại'}
+              subtitle={dataLeave?.remaining_hours}
+            />
+          )}
+          <ListItem
+            title={'Loại nghỉ phép'}
+            rightComponent={
+              <Dropdown
+                placeholder={'Chọn loại nghỉ phép'}
+                value={typeId}
+                schema={{
+                  label: 'name',
+                  value: 'id',
+                }}
+                visible={visibleModalType}
+                data={typeLeave}
+                onBackdropPress={() => {
+                  setVisibleModalType(false);
+                }}
+                onRequestClose={() => {
+                  setVisibleModalType(false);
+                }}
+                onChange={value => {
+                  handleSelectTypeLeave(value);
+                }}
+              />
+            }
+            onPress={() => {
+              setVisibleModalType(true);
+            }}
+            bottomComponent={
+              <>
+                <View style={styles.sheetMenu}>
+                  <Text style={styles.menuLabel}>Ngày</Text>
+                  <Text style={styles.menuLabel}>Buổi nghỉ</Text>
+                </View>
+                <FlatList
+                  scrollEnabled={false}
+                  data={lines}
+                  renderItem={renderLineItem}
+                  ItemSeparatorComponent={() => 
+                  <View style={{borderBottomWidth: 1,borderColor: '#d9d9d9'}}/>}
+                />
+              </>
+            }
+          />
+          <ListItem
+            title={'Lý do'}
+            bottomDivider={false}
+            bottomComponent={
+              <TextInput
+                value={note}
+                onChangeText={text => setNote(text)}
+                style={styles.input}
+                numberOfLines={5}
+                multiline={true}
+              />
+            }
+            rightStyle={{}}
+          />
+        </KeyboardAwareScrollView>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}>
+          <TouchableOpacity style={styles.btnSave} onPress={onSave}>
+          <MaterialCommunityIcons
+                name="content-save-outline"
+                size={17}
+                color="white"
+                style={{margin: 5}}
+              />
+            <Text style={{color: 'white', fontSize: 20}}>Lưu</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onSent} style={styles.btSent}>
+            <SvgSend style={{marginRight:5}}/>
+            <Text style={{color: 'white', fontSize: 20}}>Gửi</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onClose} style={styles.btnCance}>
+          <MaterialCommunityIcons
+                name="close-box-multiple"
+                size={17}
+                color="white"
+                style={{margin: 5}}
+              />
+            <Text style={{color: 'white', fontSize: 20}}>Đóng</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
-      <View
-        style={{
-          flexDirection: 'row',
-          padding: 5,
-          justifyContent: 'space-between',
-        }}>
-        <TouchableOpacity style={styles.btnSave}>
-          <Text style={{color: 'white', fontSize: 20}}>Lưu</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.btSent}>
-          <Text style={{color: 'white', fontSize: 20}}>Gửi</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.btnCance}>
-          <Text style={{color: 'white', fontSize: 20}}>Đóng</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+      <Dropdown value={currentLine?.type}
+        visible={isVisibleModalLine}
+        data={lineType}
+        showLabel={false}
+        onBackdropPress={() => {
+          setVisibleModalLine(false);
+        }}
+        onRequestClose={() => {
+          setVisibleModalLine(false);
+        }}
+        onChange={value => {
+          onValueChangeLineItem(value);
+        }}
+      />
+      <DatePicker visible={showCalendarFromDate}
+        onClose={() => {
+          setShowCalendarFromDate(false);
+        }}
+        value={fromDate}
+        onDayChange={value => {
+          setFromDate(value);
+          setShowCalendarFromDate(false);
+        }}
+      />
+      <DatePicker visible={showCalendarToDate}
+        onClose={() => {
+          setShowCalendarToDate(false);
+        }}
+        value={toDate}
+        onDayChange={value => {
+          setToDate(value);
+          setShowCalendarToDate(false);
+        }}
+      />
+    </>
   );
 };
 
 export default CreateLeave;
-const {height} = Dimensions.get('window');
-const modalHeight = height / 2;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 12,
   },
-  icon: {
-    position: 'absolute',
-    paddingHorizontal: 230,
-    margin: 5,
-  },
-  line: {
-    backgroundColor: '#d9d9d9',
-    height: 1,
-    width: 390,
-    marginLeft: 10,
-    bottom: 5,
-  },
-  text: {
-    fontSize: 18,
-    color: 'black',
-    fontFamily: 'Chakra-Petch',
-  },
-  textItem: {
-    marginLeft: 10,
-    marginTop: 5,
-    fontSize: 17,
-    color: 'black',
-    fontFamily: 'ChakraPetch-Light',
-  },
-  textLeave: {
-    fontSize: 17,
-    fontFamily: 'Chakra-Petch',
-    margin: 10,
-    marginLeft: 90,
-    color: 'black',
-  },
-  line2: {
-    marginTop: 10,
-    backgroundColor: '#d9d9d9',
-    height: 1,
-    width: 390,
-    marginLeft: 10,
-  },
-  textInput: {
-    borderRadius: 5,
-    backgroundColor: null,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingLeft: 20,
-    paddingRight: 20,
-    minHeight: 100,
-    fontSize: 17,
-    textAlignVertical: 'top',
-  },
+
   btnSave: {
     backgroundColor: '#016243',
     height: 40,
     width: 125,
+    bottom:5,
     borderRadius: 5,
-    margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection:'row'
   },
   btSent: {
     backgroundColor: '#2eb8b8',
     height: 40,
+    left:5,
+    bottom:5,
     width: 125,
     borderRadius: 5,
-    margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection:'row'
   },
   btnCance: {
     backgroundColor: '#595959',
     height: 40,
     width: 125,
+    left:5,
+    bottom:5,
     borderRadius: 5,
-    margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection:'row'
   },
-  centeredView: {
+  sheetMenu: {
+    borderTopWidth: 3,
+    borderColor: '#016243',
+    backgroundColor: '#d9d9d9',
+    flexDirection: 'row',
+    height: 50,
+    marginBottom: 10,
+  },
+  menuLabel: {
+    fontSize: 17,
+    fontFamily: 'Chakra-Petch',
+    color: 'black',
     flex: 1,
-    justifyContent: 'center',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
+  lineItem: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    justifyContent: 'space-around',
+  },
+  viewLineItemRight: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  modalView2: {
-    backgroundColor: 'white',
-    width: 150,
-    elevation: 2,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+  lineStatus: {
+    marginRight: 12,
+    fontSize:17,
+    color:'black'
   },
-  modalView: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    width: '100%',
-    height: 400,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: Dimensions.get('window').width * 0.8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  modalItem: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#3F3F3F',
+  textItem:{
+    fontSize:17,
+    color:'black'
   },
   input: {
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-  },
-  placeholder: {
-    fontSize: 20,
-    color: '#3F3F3F',
-    padding: 5,
-  },
-  textSelect: {
-    fontSize: 16,
-    color: '#3F3F3F',
-    padding: 5,
+    borderRadius: 8,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    minHeight: 100,
+    fontSize: 17,
+    textAlignVertical: 'top',
   },
 });
