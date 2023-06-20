@@ -1,12 +1,18 @@
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import moment from 'moment';
-import React, { useState } from 'react';
-import { SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { TabBar, TabView } from 'react-native-tab-view';
+import React, {useState} from 'react';
+import {
+  SectionList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {TabBar, TabView} from 'react-native-tab-view';
 import SvgLeave from '../../assets/svg/LeaveSvg';
 import FabButton from '../../component/FabButton';
-import { useAppSelector } from '../../redux/store';
-import { API_GET_LEAVES } from '../../repository/Type';
+import {useAppSelector} from '../../redux/store';
+import {API_GET_LEAVES} from '../../repository/Type';
 
 const TabViewExample = () => {
   const navigation = useNavigation();
@@ -15,8 +21,8 @@ const TabViewExample = () => {
   const access_token = useAppSelector(state => state.auth.access_token);
   const [data, setData] = useState([]);
   const [routes, setRoutes] = useState([]);
-  const [leave_id,setLeave_id] = useState(null)
-// console.log("99999", routes.length !== 0 ? routes[index]?.key : 0,);
+  const [leave_id, setLeave_id] = useState(null);
+  // console.log("99999", routes.length !== 0 ? routes[index]?.key : 0,);
   React.useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       const getLeaves = () => {
@@ -40,10 +46,11 @@ const TabViewExample = () => {
                 key: item.stage_name_id,
                 title: item.stage_name,
               }));
-              const leave_id = json.result?.data?.app_data[0]?.data[0]?.value?.id;
+              const leave_id =
+                json.result?.data?.app_data[0]?.data[0]?.value?.id;
               setData(json.result.data.app_data);
               setRoutes(stages);
-              setLeave_id(leave_id)
+              setLeave_id(leave_id);
             }
           })
           .catch(error => console.log('Error: ', error));
@@ -51,30 +58,30 @@ const TabViewExample = () => {
       getLeaves();
     });
     return unsubscribe;
-  }, [navigation,index]);
-  const handleDetail = () =>{
-    navigation.navigate('DetailLeave',{leave_id:leave_id})
-  }
+  }, [navigation, index]);
+  const handleDetail = () => {
+    navigation.navigate('DetailLeave', {leave_id: leave_id});
+  };
 
   const renderTabBar = props => (
     <TabBar
       {...props}
-      indicatorStyle={{ backgroundColor: '#016243' }}
-      style={{ backgroundColor: 'white' }}
-      labelStyle={{ fontSize: 15,color:'black', fontFamily: 'Chakra-Petch'}}
-      tabContainerStyle={{ justifyContent: 'flex-start' }}
+      indicatorStyle={{backgroundColor: '#016243'}}
+      style={{backgroundColor: 'white'}}
+      labelStyle={{fontSize: 15, color: 'black', fontFamily: 'Chakra-Petch'}}
+      tabContainerStyle={{justifyContent: 'flex-start'}}
       scrollEnabled={true}
-      tabStyle={{ flex: 1,padding:0}}
+      tabStyle={{flex: 1, padding: 0}}
     />
   );
   const Tab = () => {
     return (
-      <SectionList 
+      <SectionList
         sections={data}
         keyExtractor={(item, index) => item + index}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <TouchableOpacity onPress={handleDetail}>
-            <View style={{ backgroundColor: '#DEE0E2' }}>
+            <View style={{backgroundColor: '#DEE0E2'}}>
               <View
                 style={{
                   margin: 10,
@@ -97,48 +104,52 @@ const TabViewExample = () => {
                     <SvgLeave />
                   </View>
                 </View>
-                <View style={{ marginLeft: 10, margin: 10 }}>
+                <View style={{marginLeft: 10, margin: 10}}>
                   <Text style={styles.textFlat}>Đơn xin nghỉ</Text>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>Nhân sự: </Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>Nhân sự: </Text>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       {item?.value?.employee?.name}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       Phòng ban:{' '}
                     </Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       {item?.value?.department?.name}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>Từ ngày: </Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
-                      {moment(item?.value?.request_date_from).format('DD/MM/YYYY')}
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>Từ ngày: </Text>
+                    <Text style={{color: 'gray', fontSize: 16}}>
+                      {moment(item?.value?.request_date_from).format(
+                        'DD/MM/YYYY',
+                      )}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       Đến ngày:{' '}
                     </Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
-                      {moment(item?.value?.request_date_to).format('DD/MM/YYYY')}
+                    <Text style={{color: 'gray', fontSize: 16}}>
+                      {moment(item?.value?.request_date_to).format(
+                        'DD/MM/YYYY',
+                      )}
                     </Text>
                   </View>
-                  <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>Lý do:</Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                  <View style={{flexDirection: 'row'}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>Lý do:</Text>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       {item?.value?.note}
                     </Text>
                   </View>
                   <View
-                    style={{ flexDirection: 'row', marginTop: 20, bottom: 10 }}>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                    style={{flexDirection: 'row', marginTop: 20, bottom: 10}}>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       Trạng thái:{' '}
                     </Text>
-                    <Text style={{ color: 'gray', fontSize: 16 }}>
+                    <Text style={{color: 'gray', fontSize: 16}}>
                       {item?.value?.state}
                     </Text>
                   </View>
@@ -147,7 +158,7 @@ const TabViewExample = () => {
             </View>
           </TouchableOpacity>
         )}
-        renderSectionHeader={({ section }) => (
+        renderSectionHeader={({section}) => (
           <View
             style={{
               backgroundColor: '#e6f9ff',
@@ -177,12 +188,11 @@ const TabViewExample = () => {
     <>
       <TabView
         lazy
-        navigationState={{ index, routes }}
+        navigationState={{index, routes}}
         renderScene={renderScene}
         onIndexChange={setIndex}
         renderTabBar={renderTabBar}
       />
-      
 
       <FabButton onPress={() => navigation.navigate('CreateLeave')} />
     </>

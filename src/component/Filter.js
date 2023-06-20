@@ -17,6 +17,7 @@ const Filter = ({
   onBackdropPress,
   value,
   onChange,
+  onPress,
   ...modalOtherProps
 }) => {
   const inputRef = useRef(null);
@@ -41,7 +42,7 @@ const Filter = ({
       setError('')
       setModalVisible(false)
     }else{
-      setError('Sdt k đúng định dạng')
+      setError('Sdt không đúng định dạng')
     }
   }
   return (
@@ -54,9 +55,7 @@ const Filter = ({
         <TouchableWithoutFeedback onPress={onBackdropPress}>
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
-        <View style={{flexDirection:'row',backgroundColor: '#016243', position: "relative", alignItems: "center"}}>
-          {/* <Feather name="search" color='gray' size={20} style={{top:20,position: 'absolute', zIndex: 9, left: 20}}/> */}
-
+        <View style={{flexDirection:'row',backgroundColor: '#016243',justifyContent:'flex-end'}}>
           <TextInput
             defaultValue={value}
             onChangeText={text => {
@@ -67,9 +66,9 @@ const Filter = ({
             style={styles.search}
             placeholder={i18n.t('Search')}
           />
-          <Feather name='refresh-ccw' color='red' size={20} style={{top:20,position:'absolute',marginLeft:370}}/>
+          <Feather name='refresh-ccw' color='red' size={20} style={{top:20,position:'absolute',right:20}}/>
           </View>
-          <Text style={{color:'red',backgroundColor:'white',marginLeft:15,fontSize:20}}>{error}</Text>
+          <Text style={{color:'red',backgroundColor:'white',marginLeft:15,fontSize:16}}>{error}</Text>
           <View style={{backgroundColor:null}}>
           <TouchableOpacity
             onPress={onPressName}

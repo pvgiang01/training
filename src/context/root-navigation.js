@@ -28,7 +28,7 @@ const RootNav = () => {
     <>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={isSignedIn ? 'MyTabs' : 'Login'}
+          initialRouteName={'Login'}
           screenOptions={{
             gestureDirection: 'horizontal',
           }}>
@@ -97,7 +97,7 @@ const RootNav = () => {
               headerTitleStyle: {fontFamily: 'Chakra-Petch'},
             }}
           />
-           <Stack.Screen
+          <Stack.Screen
             name="DetailWork"
             component={DetailWork}
             options={{
@@ -147,7 +147,7 @@ const RootNav = () => {
               headerTitleStyle: {fontFamily: 'Chakra-Petch'},
             }}
           />
-           <Stack.Screen
+          <Stack.Screen
             name="DetailChild"
             component={DetailChild}
             options={{

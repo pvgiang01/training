@@ -33,7 +33,6 @@ const Ui = props => {
   const [isLoading, setIsLoading] = useState(false);
   const [visibleFilter, setVisbleFilter] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [handleData,setHandleData] = useState(false);
   const [meta, setMeta] = useState({
     total_record: 0,
     current_page: 0,
@@ -42,7 +41,7 @@ const Ui = props => {
   });
 
   const onEndReached = () => {
-    !dataEmployee.length < PAGE_SIZE && setIsLoading(false);
+    !dataEmployee.length < PAGE_SIZE && setIsLoading(true);
     if (meta.next_page > meta.current_page) {
       fetch(API_POST_EMPLOYEE, {
         method: 'POST',
@@ -199,30 +198,22 @@ const Ui = props => {
           style={{
             flexDirection: 'row',
             backgroundColor: '#016243',
-            position: 'relative',
-            alignItems: 'center',
+            justifyContent:'flex-end'
           }}>
-          <Pressable
-            style={styles.press}
-            onPress={() => {
-              setVisbleFilter(true);
-            }}>
+          
             <TextInput
-              editable={false}
               pointerEvents="none"
-              defaultValue={search}
+              value={search}
+              onChangeText={(text) => setSearch(text)}
               style={styles.search}
               placeholder={i18n.t('Search')}
             />
-          </Pressable>
-          <TouchableOpacity style={{position:'absolute',bottom:65}} onPress={() =>setSearch()}>
-          <Feather 
+          <Feather onPress={() =>setSearch()}
             name="refresh-ccw"
             color="red"
             size={20}
-            style={{top: 20, position: 'absolute', marginLeft: 370}}
+            style={{top: 20, position: 'absolute',right:20}}
           />
-          </TouchableOpacity>
         </View>
         <FlatList
           data={dataEmployee}

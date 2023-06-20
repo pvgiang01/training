@@ -15,55 +15,17 @@ import {
 import {useAppSelector} from '../../redux/store';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import i18n from '../../i18n/i18n';
+import {getNotification} from '../../repository/Notification';
 export const PAGE_SIZE = 15;
 const Notifications = props => {
   const {navigation} = props;
-  const accessToken = useAppSelector(state => state.auth.access_token);
+  const access_token = useAppSelector(state => state.auth.access_token);
 
   const [dataNotifications, setDataNotifications] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [unseen, setUnseen] = useState();
-  const [currentPage, setCurrentPage] = useState(1);
-  
   const [markAllNotifications, setMarkAllNotifications] = useState();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [meta, setMeta] = useState({
-    total_record: 0,
-    current_page: 0,
-    next_page: 0,
-    items_per_page: 0,
-  });
-
-  const onEndReached = () => {
-    !dataNotifications.length < PAGE_SIZE && setIsLoading(true);
-    if (meta.next_page > meta.current_page || dataNotifications.length < PAGE_SIZE) {
-      fetch(API_NOTIFICATIONS, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token:accessToken,
-          page: meta.next_page,
-          items_per_page: PAGE_SIZE,
-        }),
-      })
-        .then(respone => respone.json())
-        .then(json => {
-          if (json.result?.status) {
-            let data = json.result.data.data;
-            let meta = json.result.data.meta;
-            setDataNotifications([...dataNotifications, ...data]);
-            setMeta(meta);
-            setIsLoading(false);
-          }
-        })
-        .catch(err => console.log(err));
-    }
-  };
 
   useEffect(() => {
     function getNotification() {
@@ -74,9 +36,7 @@ const Notifications = props => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          access_token: accessToken,
-          page: currentPage,
-          items_per_page: PAGE_SIZE,
+          access_token: access_token,
         }),
       })
         .then(respone => respone.json())
@@ -84,18 +44,16 @@ const Notifications = props => {
           if (json.result?.status) {
             const data = json.result.data.data;
             const dataUnseen = json.result.data.unseen;
-            const meta = json.result.data.meta;
             setDataNotifications(data);
             setUnseen(dataUnseen);
-            setMeta(meta)
           } else {
             console.log('Failed!!!!');
           }
         })
-        .catch(error => console.log('Error: ', error))
+        .catch(error => console.log('Error: ', error));
     }
     getNotification();
-  }, [meta]);
+  }, []);
 
   const handleMarkAll = () => {
     fetch(API_SEEN_ALL_NOTIFICATIONS, {
@@ -105,7 +63,7 @@ const Notifications = props => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        access_token: accessToken,
+        access_token: access_token,
       }),
     })
       .then(response => response.json())
@@ -181,10 +139,6 @@ const Notifications = props => {
           data={dataNotifications}
           renderItem={renderItem}
           keyExtractor={item => `${item.id}`}
-          onEndReached={({distanceFromEnd}) => {
-            onEndReached();
-          }}
-          ListFooterComponent={isLoading ? <ActivityIndicator /> : undefined}
         />
       </View>
       <Modal

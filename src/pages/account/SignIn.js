@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Text,
   View,
@@ -8,7 +8,7 @@ import {
   TextInput,
   Dimensions,
   Platform,
-  ToastAndroid
+  ToastAndroid,
 } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import {setUser} from '../../redux/slices/auth.slice';
@@ -21,44 +21,117 @@ import SvgWebsite from '../../assets/svg/WebSvg';
 import SvgFacebook from '../../assets/svg/FacebookSvg';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import i18n from '../../i18n/i18n';
+import TouchID from 'react-native-touch-id';
+import * as Keychain from 'react-native-keychain';
+import {useAppSelector} from '../../redux/store';
+import FingerprintScanner from 'react-native-fingerprint-scanner';
 export const LoginScreen = ({navigation}) => {
   const dispatch = useDispatch();
   const [type, setType] = useState('odoo');
-  const [login, setLogin] = useState('');
+  const [login, setLogin] = useState();
   const [password, setPassword] = useState('');
   const [showP, setShowP] = useState(false);
-  const handleLogin = () => {
-    if (login.trim() == 0) {
-      ToastAndroid.show('Vui lòng nhập tài khoản',ToastAndroid.SHORT);
-    } else if (password.trim() == 0) {
-      ToastAndroid.show('Vui lòng nhập mật khẩu',ToastAndroid.SHORT);
-    } else {
-      fetch(API_SIGNIN, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: type,
-          login: login,
-          password: password,
-          device_id: DeviceInfo.getDeviceId(),
-        }),
-      })
-        .then(response => response.json())
-        .then(json => {
-          if (json.result?.code === 200) {
-            const result = json.result.data;
-            dispatch(setUser(result));
-            navigation.navigate('MyTabs');
-          } else {
-            ToastAndroid.show('Tài khoản hoặc mật khẩu không đúng',ToastAndroid.SHORT);
-          }
-        })
-        .catch(err => console.warn(err));
-    }
+  const [isSupport, setIsSupport] = useState(null);
+  const token = useAppSelector(state => state.auth.access_token);
+  console.log('token', token);
+  const optionalConfigObject = {
+    title: 'Xác thực vân tay',
+    cancelText: 'Hủy bỏ',
   };
+
+  const handleLogin = () => {
+    fetch(API_SIGNIN, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: type,
+        login: login,
+        password: password,
+        device_id: DeviceInfo.getDeviceId(),
+      }),
+    })
+      .then(response => response.json())
+      .then(json => {
+        if (json.result?.code === 200) {
+          const result = json.result.data;
+          Keychain.setGenericPassword(login, password);
+          dispatch(setUser(result));
+          navigation.navigate('MyTabs');
+        } else {
+          ToastAndroid.show(json.result.message, ToastAndroid.SHORT);
+        }
+      })
+      .catch(err => console.warn(err));
+  };
+
+  async function handleTouchID() {
+    try {
+      await FingerprintScanner.authenticate({description: 'Xác thực vân tay'});
+      await handleLogin();
+    } catch (error) {
+      ToastAndroid.show('False', ToastAndroid.SHORT);
+    }
+    // FingerprintScanner.authenticate({description: 'Xác thực vân tay'})
+    //   .then(() => {
+    //     ToastAndroid.show('True', ToastAndroid.SHORT);
+    //     await handleLogin();
+    //   })
+    //   .catch(() => {
+    //     ToastAndroid.show('False', ToastAndroid.SHORT);
+    //   });
+  }
+
+  // const handleTouchID = () => {
+  //   TouchID.authenticate('', optionalConfigObject)
+  //     .then(() => {
+  //       // Xác thực Touch ID thành công
+  //       Keychain.getGenericPassword().then(credentials => {
+  //         if (credentials) {
+  //           const login = credentials.username;
+  //           const password = credentials.password;
+  //           fetch(API_SIGNIN, {
+  //             method: 'POST',
+  //             headers: {
+  //               Accept: 'application/json',
+  //               'Content-Type': 'application/json',
+  //             },
+  //             body: JSON.stringify({
+  //               type: type,
+  //               login: login,
+  //               password: password,
+  //               device_id: DeviceInfo.getDeviceId(),
+  //             }),
+  //           })
+  //             .then(response => response.json())
+  //             .then(json => {
+  //               if (json.result?.code === 200) {
+  //                 const result = json.result.data;
+  //                 dispatch(setUser(result));
+  //                 navigation.navigate('MyTabs');
+  //               } else {
+  //                 ToastAndroid.show(json.result.message, ToastAndroid.SHORT);
+  //               }
+  //             })
+  //             .catch(err => console.warn(err));
+  //         }
+  //       });
+  //     })
+  //     .catch(error => {
+  //       console.log('Xác thực Touch ID không thành công:', error);
+  //     });
+  // };
+
+  useEffect(() => {
+    TouchID.isSupported()
+      .then(biometryType => {
+        console.log('success', biometryType);
+        setIsSupport(biometryType);
+      })
+      .catch(err => console.log('Error: ', err));
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -66,47 +139,54 @@ export const LoginScreen = ({navigation}) => {
       <View>
         <SvgLogo style={styles.imgLogo} />
       </View>
-        <View style={styles.inputEmail}>
+      <View style={styles.inputEmail}>
+        <TextInput
+          style={{fontFamily: 'Chakra-Petch'}}
+          value={login}
+          placeholder={i18n.t('User')}
+          onChangeText={text => setLogin(text)}
+          placeholderTextColor="gray"
+        />
+      </View>
+      <View style={{position: 'relative'}}>
+        <View style={styles.inputPass}>
           <TextInput
             style={{fontFamily: 'Chakra-Petch'}}
-            value={login}
-            placeholder={i18n.t('User')}
-            onChangeText={text => setLogin(text)}
+            value={password}
+            placeholder={i18n.t('Password')}
+            onChangeText={text => setPassword(text)}
             placeholderTextColor="gray"
+            secureTextEntry={!showP}
+          />
+          <FontAwesome5
+            name={showP ? 'eye-slash' : 'eye'}
+            onPress={() => setShowP(!showP)}
+            color="gray"
+            size={20}
+            style={{
+              position: 'absolute',
+              zIndex: 9,
+              right: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           />
         </View>
-        <View style={{position: 'relative'}}>
-          <View style={styles.inputPass}>
-            <TextInput
-              style={{fontFamily: 'Chakra-Petch'}}
-              value={password}
-              placeholder={i18n.t('Password')}
-              onChangeText={text => setPassword(text)}
-              placeholderTextColor="gray"
-              secureTextEntry={!showP}
-            />
-            <FontAwesome5
-              name={showP ? 'eye-slash' : 'eye'}
-              onPress={() => setShowP(!showP)}
-              color="gray"
-              size={20}
-              style={{
-                position: 'absolute',
-                zIndex: 9,
-                right: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            />
-          </View>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={styles.btnLogin}
-            onPress={() => handleLogin()}>
-            <Text style={styles.textLogin}>{i18n.t('SignIn')}</Text>
-          </TouchableOpacity>
-        </View>
+      </View>
+      <View
+        style={{
+          flexDirection: 'column',
+          position: 'absolute',
+        }}>
+        <TouchableOpacity style={styles.btnLogin} onPress={() => handleLogin()}>
+          <Text style={styles.textLogin}>{i18n.t('SignIn')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.btnLogin, {marginTop: 50}]}
+          onPress={() => handleTouchID()}>
+          <Text style={styles.textTouchid}>Đăng nhập vân tay</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.viewIcon}>
         <View style={{flexDirection: 'column', marginHorizontal: 25}}>
           <SvgWebsite />
@@ -152,11 +232,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     flex: 1,
     ...Platform.select({
-      android:{
-        marginLeft:10,
-        marginRight:10
-      }
-    })
+      android: {
+        marginLeft: 10,
+        marginRight: 10,
+      },
+    }),
   },
   inputPass: {
     flex: 1,
@@ -170,11 +250,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingLeft: 10,
     ...Platform.select({
-      android:{
-        marginLeft:10,
-        marginRight:10
-      }
-    })
+      android: {
+        marginLeft: 10,
+        marginRight: 10,
+      },
+    }),
   },
   btnLogin: {
     position: 'absolute',
@@ -184,16 +264,24 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#016243',
     ...Platform.select({
-      android:{
-        marginLeft:10,
-        marginRight:10
-      }
-    })
+      android: {
+        marginLeft: 10,
+        marginRight: 10,
+      },
+    }),
   },
   textLogin: {
-    width: 100,
     height: 30,
     left: 140,
+    top: 10,
+    color: '#FFFFFF',
+    fontFamily: 'Chakra-Petch',
+    fontStyle: 'normal',
+    fontSize: 18,
+  },
+  textTouchid: {
+    height: 30,
+    left: 110,
     top: 10,
     color: '#FFFFFF',
     fontFamily: 'Chakra-Petch',

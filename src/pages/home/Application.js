@@ -8,7 +8,7 @@ import {
   Image,
   Dimensions,
   Pressable,
-  Platform
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SvgWork from '../../assets/svg/WorkSvg';
@@ -24,7 +24,7 @@ const Application = ({navigation}) => {
   const access_token = useAppSelector(state => state.auth.access_token);
   const auth = useAppSelector(state => state.auth);
   const [dataLeave, setDataLeave] = useState();
-  
+
   useEffect(() => {
     async function getRemainLeave() {
       await fetch(API_GET_REMAIN_LEAVE, {
@@ -64,7 +64,7 @@ const Application = ({navigation}) => {
           <TouchableOpacity
             onPress={() => navigation.navigate('SettingScreen')}>
             <Ionicons
-              style={{top: 5,marginLeft:70}}
+              style={{top: 5, marginRight: 20}}
               name="settings-outline"
               size={30}
               color="#016243"
@@ -80,9 +80,7 @@ const Application = ({navigation}) => {
           }}>
           <View style={{flexDirection: 'column', marginRight: 10}}>
             <Text style={styles.text}>Quản lí công</Text>
-            <Text style={styles.leave}>
-              4.5/24
-            </Text>
+            <Text style={styles.leave}>4.5/24</Text>
           </View>
           <View style={styles.line} />
           <View style={{flexDirection: 'column', marginLeft: 10}}>
@@ -97,12 +95,12 @@ const Application = ({navigation}) => {
             marginTop: 170,
             marginLeft: 140,
           }}>
-             <View style={{flexDirection: 'column'}}>
+          <View style={{flexDirection: 'column'}}>
             <Text style={styles.text}>Số phép đã dùng</Text>
             <Text style={styles.leave}>{dataLeave?.used_leave}</Text>
           </View>
-          <View style={styles.line2}/>
-          <View style={{flexDirection: 'column',marginLeft:10}}>
+          <View style={styles.line2} />
+          <View style={{flexDirection: 'column', marginLeft: 10}}>
             <Text style={styles.text}>Số phép còn lại</Text>
             <Text style={styles.leave}>{dataLeave?.remain_leave}</Text>
           </View>
@@ -111,7 +109,7 @@ const Application = ({navigation}) => {
       <View style={{marginLeft: 10, marginTop: 100}}>
         <Text style={styles.textCategory}>Ưa thích</Text>
       </View>
-      <View style={{flexDirection: 'row',padding:5}}>
+      <View style={{flexDirection: 'row', padding: 5}}>
         <TouchableOpacity
           style={styles.viewWork}
           onPress={() => navigation.navigate('Work')}>
@@ -216,8 +214,8 @@ const styles = StyleSheet.create({
     height: 130,
     width: 100,
     top: 20,
-    left:10,
-    borderRadius:5
+    left: 10,
+    borderRadius: 5,
   },
   viewProfile: {
     backgroundColor: 'white',
@@ -227,14 +225,14 @@ const styles = StyleSheet.create({
     top: 60,
     borderRadius: 20,
     elevation: 2,
-    flex: 1,
-    flexDirection: 'row', 
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     ...Platform.select({
-      android:{
-        marginLeft:10,
-        marginRight:10
-      }
-    })
+      android: {
+        marginLeft: 10,
+        marginRight: 10,
+      },
+    }),
   },
   imgProfile: {
     position: 'absolute',
@@ -243,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 5,
     fontSize: 20,
-    paddingLeft:130,
+    paddingLeft: 130,
     color: 'black',
     fontWeight: 'bold',
   },
@@ -258,7 +256,7 @@ const styles = StyleSheet.create({
     height: 35,
     width: 2,
     backgroundColor: '#cccccc',
-    marginLeft:10,
+    marginLeft: 10,
     top: 15,
   },
   leave: {
@@ -274,11 +272,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
-      android:{
-        marginLeft:5,
-        marginRight:5
-      }
-    })
+      android: {
+        marginLeft: 5,
+        marginRight: 5,
+      },
+    }),
   },
   textWork: {
     fontSize: 15,

@@ -12,7 +12,7 @@ export const authSlice = createSlice({
     setUser: (state, action) => {
       state = {
         ...state,
-        isSignedIn: true,
+        isSignedIn: false,
         ...action.payload,
       };
       return state;
